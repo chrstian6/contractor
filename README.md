@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/hard-hat.svg" width="128" height="128" alt="Contractor" />
+</p>
+
 # Contractor
 
 **A disciplined, delegation-driven operating system for AI coding agents.**
@@ -39,8 +43,14 @@ template/                       # the payload copied into a target repo:
 From the root of the target repo:
 
 ```bash
-npx contractor-kit          # copies CLAUDE.md + .claude/ in
+# Works today — runs straight from GitHub, no npm publish needed:
+npx github:chrstian6/contractor
+
+# Once published to npm, the short name resolves too:
+npx contractor-kit
 ```
+
+Both copy `CLAUDE.md` + `.claude/` in.
 
 It **overwrites** an existing `CLAUDE.md` and `.claude/` files **by design** — but
 prompts before replacing each one and writes a `.bak` backup of whatever it
@@ -69,10 +79,12 @@ git checkout -b chore/adopt-contractor && git add -A && git commit -m "chore: ad
    gh repo create contractor --public --source=. --push
    ```
    That alone enables `npx github:<owner>/contractor` for anyone.
-2. **Publish to npm** so `npx contractor-kit` resolves by name (the name
-   `contractor-kit` is registered to this package):
+2. **Publish to npm** so `npx contractor-kit` resolves by name.
+   For the **first** publish of a new package name, use a **granular access
+   token scoped to _All packages_ with Read and write** (a token scoped to
+   "only select packages" cannot create a name that doesn't exist yet):
    ```bash
-   npm login                         # once, interactive
+   npm config set //registry.npmjs.org/:_authToken=npm_YOURTOKEN
    npm publish --access public
    ```
 3. **(Optional) Mark it a template repo** (Settings → *Template repository*) for a

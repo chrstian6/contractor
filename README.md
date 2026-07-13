@@ -51,11 +51,11 @@ template/                       # the payload copied into a target repo:
 From the root of the target repo:
 
 ```bash
-# Works today — runs straight from GitHub, no npm publish needed:
-npx github:chrstian6/contractor
-
-# Once published to npm, the short name resolves too:
+# Published on npm — the short name just works:
 npx contractor-kit
+
+# Or run straight from GitHub (no npm needed):
+npx github:chrstian6/contractor
 ```
 
 Both copy `CLAUDE.md` + `.claude/` in.
@@ -75,8 +75,8 @@ npx contractor-kit fill                           # fills placeholders + creates
 git checkout -b chore/adopt-contractor && git add -A && git commit -m "chore: adopt Contractor"
 ```
 
-> No npm install needed — `npx` downloads and runs it on demand. Before publishing
-> to npm you can run it straight from GitHub: `npx github:<owner>/contractor`.
+> No npm install needed — `npx` downloads and runs it on demand. You can also run
+> it straight from GitHub: `npx github:chrstian6/contractor`.
 
 ## Publish so anyone can use it
 

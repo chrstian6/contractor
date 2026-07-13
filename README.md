@@ -69,9 +69,11 @@ git checkout -b chore/adopt-contractor && git add -A && git commit -m "chore: ad
    gh repo create contractor --public --source=. --push
    ```
    That alone enables `npx github:<owner>/contractor` for anyone.
-2. **Publish to npm** so `npx contractor-kit` resolves by name:
+2. **Publish to npm** so `npx contractor-kit` resolves by name (the name
+   `contractor-kit` is registered to this package):
    ```bash
-   npm publish --access public       # name must be free; edit "name" in package.json
+   npm login                         # once, interactive
+   npm publish --access public
    ```
 3. **(Optional) Mark it a template repo** (Settings → *Template repository*) for a
    click-to-copy path in addition to npx.

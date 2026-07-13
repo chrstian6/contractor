@@ -1,0 +1,27 @@
+# Contractor config — copy to `contractor.config` and fill in, then run
+# `./contractor-fill.sh` (or hand-replace the {{PLACEHOLDERS}} in CLAUDE.md and
+# .claude/agents/*.md). One-time per project.
+
+# --- Project identity ---
+OWNER_HANDLE="your-github-handle"
+COLLABORATOR_HANDLES="teammate-a, teammate-b"   # cannot self-merge; "" if solo
+DEFAULT_BRANCH="main"
+
+# --- Sources of truth ---
+# The executable spec every function must match. A legacy app path, an API
+# contract, a design doc — or "greenfield; the plan doc is the spec."
+SPEC_SOURCE="./docs/spec"
+# What the UI must match. A legacy app, a Figma export, a design-system doc.
+DESIGN_SOURCE="./docs/design"
+# The vault: where persistent decisions/gotchas/learnings live. A repo folder,
+# a wiki, or an external Obsidian vault path. Installation ensures it exists.
+VAULT_PATH="./docs"
+# Features to park, not build, for now (comma list) — or "none".
+OUT_OF_SCOPE="none"
+
+# --- Model tiers (map to whatever models you run) ---
+# Orchestrator is the main thread — set it with your client's model picker
+# (e.g. `/model claude-fable-5`). Default: Fable 5.
+ORCHESTRATOR_MODEL="claude-fable-5"   # the main thread — plans, reviews, owns git
+THINKING_MODEL="opus"                 # task-manager, architect, auditor, reviewers
+BUILDER_MODEL="sonnet"                # the builder swarm

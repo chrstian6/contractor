@@ -1,0 +1,26 @@
+{
+  "name": "contractor-kit",
+  "version": "1.0.0",
+  "description": "A disciplined, delegation-driven operating system for AI coding agents. Installs CLAUDE.md + .claude/ agents, hooks, and permissions into any repo.",
+  "bin": {
+    "contractor": "bin/cli.js"
+  },
+  "files": [
+    "bin/",
+    "template/",
+    "README.md"
+  ],
+  "keywords": [
+    "claude",
+    "claude-code",
+    "ai-agents",
+    "codegen",
+    "orchestration",
+    "CLAUDE.md"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=16"
+  },
+  "type": "commonjs"
+}

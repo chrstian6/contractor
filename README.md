@@ -2,6 +2,14 @@
   <img src="assets/hard-hat.svg" width="128" height="128" alt="Contractor" />
 </p>
 
+<p align="center">
+  <a href="https://www.npmjs.com/package/contractor-kit"><img src="https://img.shields.io/npm/v/contractor-kit?color=ffd21e&label=npm" alt="npm version" /></a>
+  <img src="https://img.shields.io/badge/license-MIT-141414" alt="MIT" />
+  <img src="https://img.shields.io/badge/node-%3E%3D16-f5b800" alt="node >=16" />
+</p>
+
+<p align="center"><b><code>npx contractor-kit</code></b> — install a senior-contractor workflow into any repo in one command.</p>
+
 # Contractor
 
 **A disciplined, delegation-driven operating system for AI coding agents.**

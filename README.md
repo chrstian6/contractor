@@ -12,8 +12,8 @@
 
 # Contractor
 
-**A disciplined, delegation-driven operating system for AI coding agents.**
-Drop it into any repo and your agent starts working like a senior engineering
+**A disciplined, delegation-driven workflow for Claude.**
+Drop it into any repo and Claude starts working like a senior engineering
 contractor: it researches before it builds, plans before it executes, delegates
 grunt work to a builder swarm, reviews everything adversarially, and never
 touches your default branch directly.
@@ -28,7 +28,7 @@ stripped out and replaced with `{{PLACEHOLDERS}}` you fill once.
 bin/cli.js                      # the npx installer (`contractor` / `contractor fill`)
 package.json                    # npm package manifest (bin, files, MIT)
 template/                       # the payload copied into a target repo:
-  CLAUDE.md                     #   the operating system (Research → Plan → Execute → Review)
+  CLAUDE.md                     #   Claude's instructions (Research → Plan → Execute → Review)
   contractor.config.example     #   the placeholders to fill, once per project
   .claude/
     agents/                     #   task-manager, architect, builder, reviewer,

@@ -1,7 +1,7 @@
 {
   "name": "contractor-kit",
   "version": "1.0.0",
-  "description": "A disciplined, delegation-driven operating system for AI coding agents. Installs CLAUDE.md + .claude/ agents, hooks, and permissions into any repo.",
+  "description": "A disciplined, delegation-driven workflow for Claude. Installs CLAUDE.md + .claude/ agents, hooks, and permissions into any repo.",
   "bin": {
     "contractor": "bin/cli.js"
   },

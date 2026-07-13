@@ -78,27 +78,27 @@ git checkout -b chore/adopt-contractor && git add -A && git commit -m "chore: ad
 > No npm install needed — `npx` downloads and runs it on demand. You can also run
 > it straight from GitHub: `npx github:chrstian6/contractor`.
 
-## Publish so anyone can use it
+## Distribution
 
-1. **Push to a public GitHub repo.**
-   ```bash
-   cd contractor
-   git init && git add -A && git commit -m "feat: Contractor v1"
-   gh repo create contractor --public --source=. --push
-   ```
-   That alone enables `npx github:<owner>/contractor` for anyone.
-2. **Publish to npm** so `npx contractor-kit` resolves by name.
-   For the **first** publish of a new package name, use a **granular access
-   token scoped to _All packages_ with Read and write** (a token scoped to
-   "only select packages" cannot create a name that doesn't exist yet):
-   ```bash
-   npm config set //registry.npmjs.org/:_authToken=npm_YOURTOKEN
-   npm publish --access public
-   ```
-3. **(Optional) Mark it a template repo** (Settings → *Template repository*) for a
-   click-to-copy path in addition to npx.
-4. **(Optional) License** — an MIT `LICENSE` is already declared in package.json;
-   add the file so it's unambiguously reusable.
+Contractor is published two ways — use whichever you prefer:
+
+- **npm:** [`contractor-kit`](https://www.npmjs.com/package/contractor-kit) → `npx contractor-kit`
+- **GitHub:** [`chrstian6/contractor`](https://github.com/chrstian6/contractor) → `npx github:chrstian6/contractor`
+
+Licensed **MIT** (see [`LICENSE`](LICENSE)) — free to use, fork, and adapt.
+
+### Cutting a new version
+
+```bash
+npm version patch                 # bump version (patch | minor | major)
+npm publish --access public       # requires an npm auth token with publish rights
+git push --follow-tags
+```
+
+> First-publish note: creating a brand-new npm package name needs an auth token
+> with write access to **all packages** (a Classic *Automation* token, or a
+> granular token scoped to _All packages_ + Read/write). A granular token limited
+> to "only select packages" can't create a name that doesn't exist yet.
 
 ## Provenance
 

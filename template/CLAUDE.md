@@ -37,9 +37,10 @@ implementation the result must match.
 
 - **No reference → PLANNING MODE.** There is nothing external to match, so the
   **task-manager** owns the definition of done: it decomposes the prompt into an
-  ordered set of subtasks, writes its own acceptance criteria for each, and feeds
-  them through the pipeline one at a time. The auditor stays idle (nothing to
-  audit against); the task-manager's criteria are the bar.
+  ordered set of subtasks, writes its own acceptance criteria for each, and
+  **releases the independent ones as a parallel wave** (serializing only true
+  dependencies), keeping several in flight at once. The auditor stays idle
+  (nothing to audit against); the task-manager's criteria are the bar.
 
 **Both modes converge on the same pipeline:** architect (design only) → builder
 swarm (one per independent slice, parallel) → independent reviewers (adversarial) → orchestrator merge.
@@ -94,10 +95,15 @@ Work flows through a fixed chain and never through a single agent start-to-finis
   commits, PRs, merges). It NEVER does grunt work in-thread — no boilerplate, no
   test scaffolding, no bulk edits, no formatting sweeps. If it catches itself
   typing repetitive code, it stops and delegates.
-- **task-manager** — backlog owner, top of the chain. Holds the ranked backlog,
-  hands the orchestrator ONE scoped task at a time with acceptance criteria and
-  the invariants it must honor. Writes no code. When a task is reported done, it
-  checks the result against its acceptance criteria first, then issues the next.
+- **task-manager** — backlog owner, top of the chain. Holds the ranked backlog
+  and **releases a parallel wave of independent, unblocked tasks each cycle** —
+  each with its own acceptance criteria and the invariants it must honor — keeping
+  several in flight at once and serializing only true dependencies or
+  shared-surface tasks. Writes no code. When a task is reported done, it checks
+  the result against its acceptance criteria first, then tops the wave back up
+  with the next ready tasks. You assign work to it three ways: **plain
+  instructions**, **calling it by name**, or **pointing it at a reference**
+  (file / folder / vault / spec) to match.
 - **architect** — the design authority, **DESIGN ONLY, never executes code**.
   Produces the end-to-end flow, the algorithm/control-flow for non-trivial logic,
   the data model/schema/permissions, edge cases, and the slice plan for builders —
@@ -119,13 +125,14 @@ Work flows through a fixed chain and never through a single agent start-to-finis
   domain, comparing the build against the spec source and reporting
   DONE / PARTIAL / MISSING plus risk findings. Feeds the task-manager's backlog.
 
-**The loop**: task-manager issues a task → orchestrator hands it to the architect
-→ architect returns a design (no code) → orchestrator reviews and ENHANCES the
-design (re-scopes, sharpens the algorithm, fixes gaps, finalizes the slice plan)
-→ orchestrator commands the builder swarm (one builder per independent slice, in
-parallel) → orchestrator reviews the returned diff through the review gate →
-once clean and merged, orchestrator
-tells the task-manager it's done and asks for the next.
+**The loop**: task-manager releases a **wave of independent tasks** → the
+orchestrator runs each through the pipeline concurrently: architect returns a
+design (no code) → orchestrator reviews and ENHANCES the design (re-scopes,
+sharpens the algorithm, fixes gaps, finalizes the slice plan) → orchestrator
+commands the builder swarm (one builder per independent slice, in parallel) →
+orchestrator reviews the returned diff through the review gate → once clean and
+merged, the orchestrator reports each task done and the task-manager tops the
+wave back up with the next ready tasks.
 
 **Parallel by default.** The moment instructions are issued, execution fans out
 to multiple builders at once — never one builder grinding serially through a

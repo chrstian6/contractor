@@ -46,6 +46,19 @@ template/                       # the payload copied into a target repo:
 - **Spec Engine** — a named source of truth is the executable spec; nobody invents behavior.
 - **Model tiers** — map orchestrator / thinking / builder to whatever models you run.
 
+## Features
+
+- **Delegation org, not a lone agent.** Work flows through a fixed chain — orchestrator (owns strategy + git) → task-manager (backlog) → architect (design only) → builder swarm (parallel) → independent reviewers. No agent both writes code and approves it.
+- **Parallel task waves.** The task-manager releases *multiple* independent tasks at once and keeps the pipeline full — serializing only true dependencies — so the builder swarm is never starved.
+- **Research → Plan → Execute → Review.** It investigates and plans before writing a line; nothing skips ahead.
+- **Two intake modes.** Point it at a reference (legacy app, API contract, design) → **parity mode**, where an auditor owns "done"; give it a fresh goal → **planning mode**, where the task-manager owns "done."
+- **Branch safety.** Every change on its own branch behind a PR — never a direct commit to your default branch.
+- **Adversarial review gate.** Every diff passes ≥2 independent reviewers (correctness, silent-failure, performance, security) before merge.
+- **Spec & design engines.** A named source of truth is the executable spec; the UI matches a named design source — nobody invents behavior.
+- **Guardrail hooks.** Secret scanning, dangerous-command blocking, file protection, and large-file warnings run automatically.
+- **Vault memory.** Decisions, gotchas, and plans persist in a knowledge vault, so Contractor works across sessions instead of forgetting.
+- **Configurable model tiers.** Map orchestrator / thinking / builder to whatever models you run (defaults: Fable 5 orchestrator, a strong thinking model, a fast builder swarm).
+
 ## Install into a repo (npx)
 
 From the root of the target repo:
@@ -77,6 +90,28 @@ git checkout -b chore/adopt-contractor && git add -A && git commit -m "chore: ad
 
 > No npm install needed — `npx` downloads and runs it on demand. You can also run
 > it straight from GitHub: `npx github:chrstian6/contractor`.
+
+## How to use it
+
+Once installed and configured, you drive Contractor through the **task-manager** —
+you don't micro-manage the swarm. Assign work **three ways** (any of them starts
+the Research → Plan → Execute → Review pipeline):
+
+- **Give instructions** — describe the goal in plain language ("add X", "port the
+  billing flow", or a checklist of items).
+- **Call it by name** — address the task-manager directly to plan or re-plan the backlog.
+- **Point it at a reference** — name a file, folder, vault, spec, or legacy app to
+  match. That switches it into **parity mode**, where the reference defines "done."
+
+What happens next:
+
+1. The task-manager turns your input into a ranked backlog and **releases a parallel
+   wave** of every independent, unblocked task — not one at a time.
+2. The orchestrator runs each through the pipeline concurrently: architect designs →
+   builder swarm executes in parallel → reviewers gate the diff → orchestrator merges.
+3. As tasks land, the **next wave tops up automatically**, keeping the swarm busy.
+4. You stay in the loop where it matters — approving plans, judging quality, and the
+   ship call. Everything mechanical is delegated.
 
 ## Distribution
 

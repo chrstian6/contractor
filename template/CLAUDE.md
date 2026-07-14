@@ -165,14 +165,18 @@ scoped to its real risk surface before merge, drawn from the specialist reviewer
 in `.claude/agents/`:
 
 - **`code-reviewer`** — correctness: off-by-ones, null derefs, logic inversions, race conditions.
+- **`security-reviewer`** — OWASP-style static analysis: injection, authz/IDOR, data exposure, weak crypto, input validation.
+- **`pr-test-analyzer`** — test *quality*, not existence: assertion-free tests, mock theater, tests that can't fail, weakened/deleted tests.
 - **`silent-failure-hunter`** — swallowed errors, failures masked as success, fallbacks that hide breakage.
 - **`performance-reviewer`** — measurable bottlenecks: N+1 queries, memory leaks, blocking I/O, needless re-renders.
-- **`reviewer`** — a general adversarial lens (tests, security, parity) when the risk is broader.
+- **`reviewer`** — a general adversarial lens (parity, broader risk) when no specialist fits.
 
 Pick the two-or-more that match the diff's real risk (always `code-reviewer`;
-add `silent-failure-hunter` for error-handling/async changes, `performance-reviewer`
-for hot paths/queries/rendering), with adversarial verification for
-invariant-sensitive work. **A task that a lone agent both wrote
+add `security-reviewer` for auth/input/query/token/file-path changes,
+`pr-test-analyzer` when the diff adds/changes tests or changes behavior without
+touching tests, `silent-failure-hunter` for error-handling/async changes,
+`performance-reviewer` for hot paths/queries/rendering), with adversarial
+verification for invariant-sensitive work. **A task that a lone agent both wrote
 and self-approved is never merged.** Run your review command (or the reviewer
 agents) on the diff, fix or explicitly waive each finding, note the outcome on
 the PR, and require green CI (typecheck / lint / test / build, plus security /

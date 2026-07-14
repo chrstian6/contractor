@@ -31,8 +31,8 @@ template/                       # the payload copied into a target repo:
   CLAUDE.md                     #   Claude's instructions (Research → Plan → Execute → Review)
   contractor.config.example     #   the placeholders to fill, once per project
   .claude/
-    agents/                     #   task-manager, architect, builder, reviewer,
-                                #   code-reviewer, performance-reviewer, silent-failure-hunter
+    agents/                     #   task-manager, architect, builder, reviewer, code-reviewer,
+                                #   security-reviewer, pr-test-analyzer, performance-reviewer, silent-failure-hunter
     hooks/                      #   secret scan, dangerous-command block, file protection, session context
     rules/code-quality.md       #   naming, markers, anti-defaults
     settings.json               #   wires the hooks + a safe permission allow/deny list

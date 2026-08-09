@@ -18,7 +18,8 @@ if ! command -v jq >/dev/null 2>&1; then
 fi
 
 INPUT=$(cat)
-FILE_PATH=$(printf '%s' "$INPUT" | jq -r '.tool_input.file_path // empty' 2>/dev/null || true)
+# notebook_path: NotebookEdit carries its target under a different key.
+FILE_PATH=$(printf '%s' "$INPUT" | jq -r '.tool_input.file_path // .tool_input.notebook_path // empty' 2>/dev/null || true)
 [ -z "$FILE_PATH" ] && exit 0
 
 BASENAME=$(basename -- "$FILE_PATH")

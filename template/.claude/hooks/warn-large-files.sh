@@ -10,7 +10,8 @@ if ! command -v jq >/dev/null 2>&1; then
 fi
 
 INPUT=$(cat)
-FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty')
+# notebook_path: NotebookEdit carries its target under a different key.
+FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // .tool_input.notebook_path // empty')
 
 if [ -z "$FILE_PATH" ]; then
   exit 0

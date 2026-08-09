@@ -40,14 +40,30 @@
       "Edit(**/.env.*)",
       "Edit(**/secrets/**)",
       "Edit(**/*.pem)",
-      "Edit(**/*.key)"
+      "Edit(**/*.key)",
+
+      "Write(**/.claude/hooks/**)",
+      "Write(**/.claude/settings.json)",
+      "Write(**/.claude/settings.local.json)",
+      "Edit(**/.claude/hooks/**)",
+      "Edit(**/.claude/settings.json)",
+      "Edit(**/.claude/settings.local.json)",
+      "MultiEdit(**/.claude/hooks/**)",
+      "MultiEdit(**/.claude/settings.json)",
+      "MultiEdit(**/.claude/settings.local.json)",
+      "NotebookEdit(**/.claude/hooks/**)",
+      "NotebookEdit(**/.claude/settings.json)",
+      "NotebookEdit(**/.claude/settings.local.json)",
+
+      "Agent(general-purpose)",
+      "Agent(claude)"
     ]
   },
 
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Edit|Write",
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit",
         "hooks": [
           {
             "type": "command",
@@ -77,6 +93,23 @@
             "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/block-dangerous-commands.sh",
             "timeout": 10,
             "statusMessage": "Checking command safety..."
+          },
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/orchestrator-only-git.sh",
+            "timeout": 10,
+            "statusMessage": "Checking git ownership..."
+          }
+        ]
+      },
+      {
+        "matcher": "Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/role-based-dispatch.py",
+            "timeout": 10,
+            "statusMessage": "Checking dispatch role..."
           }
         ]
       }

@@ -31,9 +31,14 @@ template/                       # the payload copied into a target repo:
   CLAUDE.md                     #   Claude's instructions (Research → Plan → Execute → Review)
   contractor.config.example     #   the placeholders to fill, once per project
   .claude/
-    agents/                     #   task-manager, architect, builder, reviewer, code-reviewer,
-                                #   security-reviewer, pr-test-analyzer, performance-reviewer, silent-failure-hunter
-    hooks/                      #   secret scan, dangerous-command block, file protection, session context
+    agents/                     #   orchestrator, task-manager, architect, builder, auditor,
+                                #   frontend-designer, reviewer, code-reviewer, security-reviewer,
+                                #   pr-test-analyzer, performance-reviewer, silent-failure-hunter, qa-tester
+    hooks/                      #   secret scan, dangerous-command block, file protection,
+                                #   orchestrator-only git, role-based dispatch, session context,
+                                #   optional auto-approval
+    commands/auto-approve.md    #   /auto-approve — switch approval mode any time
+    scripts/auto-approve.py     #   the toggle the command (and the installer) drives
     rules/code-quality.md       #   naming, markers, anti-defaults
     settings.json               #   wires the hooks + a safe permission allow/deny list
 ```
@@ -56,6 +61,8 @@ template/                       # the payload copied into a target repo:
 - **Adversarial review gate.** Every diff passes ≥2 independent reviewers (correctness, silent-failure, performance, security) before merge.
 - **Spec & design engines.** A named source of truth is the executable spec; the UI matches a named design source — nobody invents behavior.
 - **Guardrail hooks.** Secret scanning, dangerous-command blocking, file protection, and large-file warnings run automatically.
+- **The org is enforced, not just described.** `orchestrator-only-git.sh` blocks every git/gh *write* from anything running as a subagent (read-only git stays, so delegates can still verify their own work) and stops a delegate from shell-editing the very hooks that bound it. `role-based-dispatch.py` rejects a dispatch that names no role — which would silently run as `general-purpose` holding every tool, `Agent` included — and stops any non-orchestrator from spawning agents.
+- **Approval mode you choose at install.** The installer asks: normal prompts, read-only auto-approval, or full auto-approval for unattended loops. `/auto-approve [status|on|readonly|off]` switches it any time. The guardrails apply in every mode — auto-approval removes the prompt, never the boundary.
 - **Vault memory.** Decisions, gotchas, and plans persist in a knowledge vault, so Contractor works across sessions instead of forgetting.
 - **Configurable model tiers.** Map orchestrator / thinking / builder to whatever models you run (defaults: Fable 5 orchestrator, a strong thinking model, a fast builder swarm).
 
@@ -77,6 +84,29 @@ It **overwrites** an existing `CLAUDE.md` and `.claude/` files **by design** —
 prompts before replacing each one and writes a `.bak` backup of whatever it
 replaces. Use `-y`/`--force` to skip the prompts, `--dry-run` to preview, or
 `--no-backup` to skip backups.
+
+### Onboarding: pick an approval mode
+
+At the end of the install it asks one question — how much Claude should ask
+before it acts:
+
+```
+  [1] ask      — normal permission prompts.            (default, recommended)
+  [2] readonly — auto-approve provably read-only calls; writes still ask.
+  [3] all      — auto-approve everything the guards don't block (unattended loops).
+```
+
+The guardrails are on in **every** mode: `permissions.deny` and the guard hooks
+are evaluated after any auto-approval and always win, so auto-approval removes
+the prompt, never the boundary. `-y`/`--force` and non-interactive installs get
+`ask`. Change it any time from inside Claude:
+
+```
+/auto-approve status | on | readonly | off
+```
+
+or from a shell: `python3 .claude/scripts/auto-approve.py off`. For a temporary
+kill switch, set `CLAUDE_AUTO_APPROVE=0` in the environment.
 
 Then configure once:
 

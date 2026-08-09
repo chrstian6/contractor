@@ -25,3 +25,11 @@ OUT_OF_SCOPE="none"
 ORCHESTRATOR_MODEL="claude-fable-5"   # the main thread — plans, reviews, owns git
 THINKING_MODEL="opus"                 # task-manager, architect, auditor, reviewers
 BUILDER_MODEL="sonnet"                # the builder swarm
+
+# --- Approval mode ---
+# Chosen interactively at install; change it any time with /auto-approve
+# (or: python3 .claude/scripts/auto-approve.py [status|on|readonly|off]).
+#   ask      normal permission prompts (default)
+#   readonly auto-approve provably read-only calls; writes still ask
+#   all      auto-approve everything the guard hooks don't block
+# Guard hooks and permissions.deny apply in every mode.

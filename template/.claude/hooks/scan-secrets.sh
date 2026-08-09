@@ -16,6 +16,10 @@ if [ "$TOOL_NAME" = "Write" ]; then
   CONTENT=$(echo "$INPUT" | jq -r '.tool_input.content // empty')
 elif [ "$TOOL_NAME" = "Edit" ]; then
   CONTENT=$(echo "$INPUT" | jq -r '.tool_input.new_string // empty')
+elif [ "$TOOL_NAME" = "MultiEdit" ]; then
+  CONTENT=$(echo "$INPUT" | jq -r '[.tool_input.edits[]?.new_string] | join("\n")')
+elif [ "$TOOL_NAME" = "NotebookEdit" ]; then
+  CONTENT=$(echo "$INPUT" | jq -r '.tool_input.new_source // empty')
 else
   exit 0
 fi

@@ -124,6 +124,17 @@ Work flows through a fixed chain and never through a single agent start-to-finis
 - **auditor / reviewers** — parity/quality auditors run in parallel, one per
   domain, comparing the build against the spec source and reporting
   DONE / PARTIAL / MISSING plus risk findings. Feeds the task-manager's backlog.
+- **frontend-designer** — the design authority for UI. Produces the tokens-first
+  spec the builder swarm implements and reviews built UI against it; writes no
+  files itself.
+
+**The org is enforced, not just described.** Two `PreToolUse` guards hold the
+boundaries the roles above only state: `orchestrator-only-git.sh` blocks every
+git/gh *write* (and any shell edit of `.claude/hooks` or `.claude/settings`) from
+anything running as a subagent — read-only git stays available so delegates can
+verify their own work — and `role-based-dispatch.py` rejects a dispatch that
+names no role (which would silently run as `general-purpose` with every tool,
+including `Agent`) and stops any non-orchestrator from spawning agents at all.
 
 **The loop**: task-manager releases a **wave of independent tasks** → the
 orchestrator runs each through the pipeline concurrently: architect returns a
@@ -155,8 +166,24 @@ Map the tiers to whatever models you run. The pattern matters more than the name
   Default: `{{BUILDER_MODEL}}`.
 
 Set them in `contractor.config`. The thinking/builder tiers are written into each
-agent's frontmatter by `contractor-fill.sh`; the orchestrator you select in the
-client (default `claude-fable-5`).
+agent's frontmatter by `npx contractor-kit fill`; the orchestrator you select in
+the client (default `claude-fable-5`).
+
+## Approval Mode
+
+Installation asks how much Claude should ask before it acts, and `/auto-approve
+[status|on|readonly|off]` changes it later:
+
+- **ask** (default) — normal permission prompts.
+- **readonly** — provably read-only calls skip the prompt; anything that writes asks.
+- **all** — everything the guards don't block is auto-approved, for unattended
+  loops where nobody is watching a prompt.
+
+**The guardrails are on in every mode.** `permissions.deny` and the guard hooks
+(secret scan, dangerous commands, orchestrator-only git, protected files, build
+artifacts, role-based dispatch) are evaluated after any auto-approval and always
+win. Auto-approval removes the prompt, never the boundary. `CLAUDE_AUTO_APPROVE=0`
+in the environment disables it without editing anything.
 
 ## Review Gate (MANDATORY)
 
@@ -169,13 +196,15 @@ in `.claude/agents/`:
 - **`pr-test-analyzer`** — test *quality*, not existence: assertion-free tests, mock theater, tests that can't fail, weakened/deleted tests.
 - **`silent-failure-hunter`** — swallowed errors, failures masked as success, fallbacks that hide breakage.
 - **`performance-reviewer`** — measurable bottlenecks: N+1 queries, memory leaks, blocking I/O, needless re-renders.
+- **`qa-tester`** — independently reproduces the user-facing flow and verifies it actually works against the acceptance criteria (distinct from `pr-test-analyzer`, which only judges the tests).
 - **`reviewer`** — a general adversarial lens (parity, broader risk) when no specialist fits.
 
 Pick the two-or-more that match the diff's real risk (always `code-reviewer`;
 add `security-reviewer` for auth/input/query/token/file-path changes,
 `pr-test-analyzer` when the diff adds/changes tests or changes behavior without
 touching tests, `silent-failure-hunter` for error-handling/async changes,
-`performance-reviewer` for hot paths/queries/rendering), with adversarial
+`performance-reviewer` for hot paths/queries/rendering, `qa-tester` whenever the
+change is user-facing or behavior-changing), with adversarial
 verification for invariant-sensitive work. **A task that a lone agent both wrote
 and self-approved is never merged.** Run your review command (or the reviewer
 agents) on the diff, fix or explicitly waive each finding, note the outcome on

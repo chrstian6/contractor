@@ -34,7 +34,11 @@ Options:
   -h, --help      show this help
 
 Overwrites CLAUDE.md and .claude/ by design; you are prompted before each
-existing file is replaced unless --force is given.`);
+existing file is replaced unless --force is given.
+
+After copying, it asks for an approval mode (ask / readonly / all). --force and
+non-interactive installs get "ask". Change it later from inside Claude with
+/auto-approve, or with: python3 .claude/scripts/auto-approve.py [status|on|readonly|off]`);
   process.exit(0);
 }
 
@@ -67,7 +71,7 @@ if (SUBCMD === 'fill') {
     OWNER_HANDLE: '', COLLABORATOR_HANDLES: 'none', DEFAULT_BRANCH: 'main',
     SPEC_SOURCE: 'the plan doc', DESIGN_SOURCE: 'the design doc',
     VAULT_PATH: './docs', OUT_OF_SCOPE: 'none',
-    THINKING_MODEL: 'opus', BUILDER_MODEL: 'sonnet',
+    ORCHESTRATOR_MODEL: 'claude-fable-5', THINKING_MODEL: 'opus', BUILDER_MODEL: 'sonnet',
   };
   const val = (k) => (cfg[k] && cfg[k].length ? cfg[k] : defaults[k]);
 
@@ -115,6 +119,9 @@ function walk(dir, base, out) {
 }
 const files = walk(TEMPLATE, '', []);
 
+// Hooks and scripts are invoked directly by the engine, so they must land +x.
+const EXECUTABLE = /^\.claude\/(hooks|scripts)\/.*\.(sh|py)$/;
+
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 const ask = (q) => new Promise((res) => rl.question(q, (a) => res(a.trim().toLowerCase())));
 
@@ -142,21 +149,73 @@ async function main() {
     fs.mkdirSync(path.dirname(dst), { recursive: true });
     if (exists && !NO_BACKUP) fs.copyFileSync(dst, dst + '.bak');
     fs.copyFileSync(src, dst);
-    if (rel.startsWith('.claude/hooks/') && rel.endsWith('.sh')) fs.chmodSync(dst, 0o755);
+    if (EXECUTABLE.test(rel)) fs.chmodSync(dst, 0o755);
 
     console.log(`  ${exists ? 'replace' : 'add    '} ${rel}${exists && !NO_BACKUP ? '  (backup → ' + rel + '.bak)' : ''}`);
     exists ? replaced++ : added++;
   }
 
-  rl.close();
-  if (DRY) { console.log(`\nDry run: ${added} to add, ${replaced} to replace, ${skipped} skipped.`); return; }
+  if (DRY) { rl.close(); console.log(`\nDry run: ${added} to add, ${replaced} to replace, ${skipped} skipped.`); return; }
 
   console.log(`\n✓ Contractor installed — ${added} added, ${replaced} replaced, ${skipped} skipped.`);
+
+  const mode = await chooseApprovalMode();
+  rl.close();
+  applyApprovalMode(mode);
+
   console.log(`\nNext:`);
   console.log(`  1. cp contractor.config.example contractor.config   # edit owner, vault, spec/design source`);
   console.log(`  2. npx contractor-kit fill                          # fills placeholders + creates the vault`);
   console.log(`  3. Set the orchestrator model in your client:  /model claude-fable-5`);
-  console.log(`  4. Work on a branch — Contractor is now driving.\n`);
+  console.log(`  4. Work on a branch — Contractor is now driving.`);
+  console.log(`\nChange the approval mode any time with  /auto-approve [status|on|readonly|off]\n`);
+}
+
+// ---- onboarding: how much should Claude ask before it acts? ----
+
+async function chooseApprovalMode() {
+  console.log(`
+────────────────────────────────────────────────────────────────
+  Approval mode — how much should Claude ask before it acts?
+────────────────────────────────────────────────────────────────
+
+  The guardrails are ON in every mode. Secret scanning, dangerous-command
+  blocking, file protection, orchestrator-only git, and the deny list are
+  always enforced — a guard's "deny" always beats an auto-approval.
+  What you're choosing is only whether you get PROMPTED for the rest.
+
+  [1] ask      — normal permission prompts.            (default, recommended)
+                 You approve each call the allow-list doesn't already cover.
+
+  [2] readonly — auto-approve provably read-only calls.
+                 Reads and searches stop nagging; anything that writes asks.
+
+  [3] all      — auto-approve everything the guards don't block.
+                 For unattended loops. Nobody is watching the prompt, so
+                 nothing stalls on one. Reversible: /auto-approve off,
+                 or CLAUDE_AUTO_APPROVE=0 in the environment.
+`);
+  if (FORCE || !process.stdin.isTTY) {
+    console.log('  → ask (non-interactive install)\n');
+    return 'off';
+  }
+  for (;;) {
+    const a = await ask('  Choose [1/2/3] (default 1): ');
+    if (a === '' || a === '1' || a === 'ask') return 'off';
+    if (a === '2' || a === 'readonly') return 'readonly';
+    if (a === '3' || a === 'all' || a === 'on') return 'on';
+    console.log('  Enter 1, 2, or 3.');
+  }
+}
+
+function applyApprovalMode(mode) {
+  const script = path.join(DEST, '.claude', 'scripts', 'auto-approve.py');
+  if (mode === 'off') { console.log('\n  Approval mode: ask (normal permission prompts).'); return; }
+  if (!fs.existsSync(script)) { console.log('\n  ! .claude/scripts/auto-approve.py missing — left in "ask" mode.'); return; }
+  const r = require('child_process').spawnSync('python3', [script, mode], { cwd: DEST, encoding: 'utf8' });
+  if (r.status === 0) process.stdout.write('\n  ' + (r.stdout || '').trim() + '\n');
+  else console.log(`\n  ! Could not set approval mode (${(r.stderr || '').trim() || 'python3 not found'}) — left in "ask" mode.
+    Set it later with:  python3 .claude/scripts/auto-approve.py ${mode}`);
 }
 
 main().catch((e) => { rl.close(); console.error('✗', e.message); process.exit(1); });

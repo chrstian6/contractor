@@ -10,6 +10,15 @@
     "template/",
     "README.md"
   ],
+  "author": "christian <hansesgrina.06@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chrstian6/contractor.git"
+  },
+  "homepage": "https://github.com/chrstian6/contractor#readme",
+  "bugs": {
+    "url": "https://github.com/chrstian6/contractor/issues"
+  },
   "keywords": [
     "claude",
     "claude-code",

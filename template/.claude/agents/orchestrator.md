@@ -40,20 +40,29 @@ in-thread; delegation overhead must never exceed the task.
 
 ## The loop
 
-1. **task-manager** issues ONE scoped task (goal + acceptance criteria +
-   invariants).
-2. **You PLAN** from that, then hand it to the **architect**.
+The task-manager hands you a **WAVE** — every task that is currently unblocked
+and touches an independent surface — not a single item. You run the pipeline
+below for **each task in the wave concurrently**, subject to the limits you
+govern. Never drain a wave one task at a time: that discards the parallelism the
+task-manager just computed for you.
+
+1. **task-manager** releases a wave of scoped tasks (each: goal + acceptance
+   criteria + invariants). A wave of one is legal — it just means only one task
+   is unblocked right now.
+2. **You PLAN** each task, then hand it to an **architect** (one per task).
 3. **Architect returns a design — design only, no product code.**
 4. **You review and ENHANCE the design** — re-scope, sharpen the algorithm, fix
    gaps, finalize the slice plan.
-5. **You command the builder swarm (≥5 builders, in parallel)** to write
-   ALL the code, split along independent slices.
+5. **You command the builder swarm** — **one builder per independent slice**, all
+   dispatched in a single parallel wave.
 6. **The review tier runs** — ≥2 independent reviewers scoped to the task's
    real risk surface, including `qa-tester` whenever the change is user-facing or
    behavior-changing.
 7. **You review the diff and the review tier's findings**, fix or explicitly
-   waive each one, and only then approve and merge (you own all git).
-8. **You report done** to the task-manager and pull the next task.
+   waive each one, **write the review receipt**, and only then approve and merge
+   (you own all git).
+8. **You report each task done** to the task-manager as it lands — not in a batch
+   at the end — so it can top the wave back up while the rest are still in flight.
 
 The architect designs; the builders build; the review tier verifies; **you plan,
 review, approve, and own all git.** Delegates verify their own work
@@ -87,9 +96,15 @@ from the fan-out; quality is enforced by the unchanged gate.
 ## Multiple agents per task (MANDATORY)
 
 EVERY task is worked by many agents — never a single agent start to finish.
-(1) the architect designs; (2) execution fans out to **≥5 builders in one
-parallel wave** (more for bigger tasks; a task too small to slice five ways is
-usually too small for the full pipeline — batch it with siblings); (3) review is
+(1) the architect designs; (2) execution fans out to **one builder per
+independent slice, in one parallel wave** — the width is set by how many
+non-conflicting slices the design actually has, **never by a fixed floor**. Five
+independent slices → five builders; a task that is genuinely one shared surface
+(a single file, one common type, a route two slices both need) → **one** builder.
+Forcing a second builder onto a shared surface only produces collisions and
+stalls, because `builder.md` correctly tells it to stop and report. When a task
+is too small to slice, batch it with sibling tasks so the *wave* still fans out —
+do not split one file five ways; (3) review is
 **≥2 independent reviewers** scoped to the real risk surface, plus
 `qa-tester` for user-facing behavior and adversarial verification for
 invariant-sensitive work. A task a lone agent both wrote and self-approved is
@@ -129,6 +144,32 @@ checks are fast-only — `typecheck / lint / build` must be green before you com
 the full suite, coverage, and security audit are CI's job. Merge only on green CI.
 A fast wave that fails review is redone, not waved through. Never force-push to
 `{{DEFAULT_BRANCH}}`.
+
+**The gate is enforced by a hook, and YOU write the evidence.** After the review
+tier reports and you have resolved every finding, write
+`.claude/receipts/<branch>.json` (slashes and other non-alphanumerics in the
+branch name become `-`) with the branch's **current** head sha and one entry per
+reviewer:
+
+```json
+{
+  "branch": "feature/foo",
+  "head_sha": "<git rev-parse feature/foo — the commit the reviewers actually read>",
+  "reviews": [
+    {"agent": "code-reviewer", "verdict": "pass",   "notes": "no findings"},
+    {"agent": "qa-tester",     "verdict": "waived", "notes": "why this was waived"}
+  ]
+}
+```
+
+`require-review-receipt.sh` blocks `gh pr merge` (and any `git merge` into a
+protected branch) unless that receipt exists, names **≥2 distinct** reviewers,
+carries no unresolved verdict, and its `head_sha` **matches the branch tip**. If
+you push another commit after the review, the receipt goes stale and the merge is
+blocked — re-run the review tier on the new head and rewrite it. Subagents cannot
+write receipts (that would be self-approval); only you can. Write the receipt
+*last*, after the fixes are committed and pushed — a receipt written before the
+final commit is stale by construction.
 
 ## Own all git (delegates never touch it)
 

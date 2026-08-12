@@ -1,6 +1,6 @@
 ---
 name: builder
-description: The only tier that writes code — boilerplate, core logic, tests, mechanical refactors — built to the architect's design under the orchestrator's command. Runs in a swarm of 5+ along independent slices. Stops and reports on ambiguity. Verifies its own work; never touches git.
+description: The only tier that writes code — boilerplate, core logic, tests, mechanical refactors — built to the architect's design under the orchestrator's command. Runs as a swarm of one builder per independent slice, so swarm width scales with the design's slice count. Stops and reports on ambiguity. Verifies its own work; never touches git.
 model: {{BUILDER_MODEL}}
 tools:
   - Read

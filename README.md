@@ -35,8 +35,8 @@ template/                       # the payload copied into a target repo:
                                 #   frontend-designer, reviewer, code-reviewer, security-reviewer,
                                 #   pr-test-analyzer, performance-reviewer, silent-failure-hunter, qa-tester
     hooks/                      #   secret scan, dangerous-command block, file protection,
-                                #   orchestrator-only git, role-based dispatch, session context,
-                                #   optional auto-approval
+                                #   orchestrator-only git, role-based dispatch, review-receipt
+                                #   merge gate, session context, optional auto-approval
     commands/auto-approve.md    #   /auto-approve — switch approval mode any time
     scripts/auto-approve.py     #   the toggle the command (and the installer) drives
     rules/code-quality.md       #   naming, markers, anti-defaults
@@ -47,7 +47,7 @@ template/                       # the payload copied into a target repo:
 
 - **Research → Plan → Execute → Review** — never execute first.
 - **Branch Safety** — every change on its own branch, PR + independent review before merge, no direct commits to the default branch.
-- **The Delegation Org** — orchestrator (owns strategy + git) → task-manager → architect (design only) → builder swarm (5+, parallel) → independent reviewers. No agent both writes and self-approves.
+- **The Delegation Org** — orchestrator (owns strategy + git) → task-manager → architect (design only) → builder swarm (one per independent slice, parallel) → independent reviewers. No agent both writes and self-approves.
 - **Spec Engine** — a named source of truth is the executable spec; nobody invents behavior.
 - **Model tiers** — map orchestrator / thinking / builder to whatever models you run.
 
@@ -58,7 +58,7 @@ template/                       # the payload copied into a target repo:
 - **Research → Plan → Execute → Review.** It investigates and plans before writing a line; nothing skips ahead.
 - **Two intake modes.** Point it at a reference (legacy app, API contract, design) → **parity mode**, where an auditor owns "done"; give it a fresh goal → **planning mode**, where the task-manager owns "done."
 - **Branch safety.** Every change on its own branch behind a PR — never a direct commit to your default branch.
-- **Adversarial review gate.** Every diff passes ≥2 independent reviewers (correctness, silent-failure, performance, security) before merge.
+- **Adversarial review gate, enforced by a hook.** Every diff passes ≥2 independent reviewers (correctness, silent-failure, performance, security) before merge — and `require-review-receipt.sh` *blocks the merge* until those reviewers are on record against the exact commit being merged. Push a new commit after review and the receipt goes stale, so the review re-runs.
 - **Spec & design engines.** A named source of truth is the executable spec; the UI matches a named design source — nobody invents behavior.
 - **Guardrail hooks.** Secret scanning, dangerous-command blocking, file protection, and large-file warnings run automatically.
 - **The org is enforced, not just described.** `orchestrator-only-git.sh` blocks every git/gh *write* from anything running as a subagent (read-only git stays, so delegates can still verify their own work) and stops a delegate from shell-editing the very hooks that bound it. `role-based-dispatch.py` rejects a dispatch that names no role — which would silently run as `general-purpose` holding every tool, `Agent` included — and stops any non-orchestrator from spawning agents.

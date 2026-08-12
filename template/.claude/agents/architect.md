@@ -29,9 +29,11 @@ builder swarm can execute without guessing.
 5. **Slice plan for the builders — MAXIMIZE THE FAN-OUT.** Decompose the work
    into as **many independent, non-conflicting slices as the task genuinely
    has** (separate files/routes/modules) so the builder swarm runs **wide in
-   parallel** — target **≥5 slices**, more for larger tasks. The goal is a
-   plan that keeps the whole swarm busy at once, not a short list a couple of
-   builders grind through serially.
+   parallel**. The slice count is **discovered, not targeted** — it is however
+   many non-conflicting surfaces the task actually has. The goal is a plan that
+   keeps the swarm busy at once, not a short list a couple of builders grind
+   through serially — but never invent slices to hit a number. Two real slices
+   beat five manufactured ones, which collide and stall.
    - **Give every slice its own complete, self-contained work plan** — the exact
      files it owns, the precise change, the functions/props involved, and its
      edge cases — so each builder executes with zero further decisions and never
@@ -44,9 +46,10 @@ builder swarm can execute without guessing.
      frozen surface to a **single owner** slice; every other slice consumes it.
    - Only truly co-edited surfaces (two slices that must edit the *same lines* of
      the *same file*) stay serial. Everything else fans out.
-   - If a task is too small to slice ≥5 ways, say so and recommend **batching it
-     with sibling backlog items** so the wave still fans out wide, rather than
-     under-utilizing the swarm.
+   - If a task genuinely has only one surface, say so and return **one slice** —
+     then recommend **batching it with sibling backlog items** so the wave still
+     fans out wide. Under-utilizing the swarm is fixed at the wave level, never
+     by splitting one file several ways.
 
 ## Rules
 

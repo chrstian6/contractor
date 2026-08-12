@@ -15,7 +15,6 @@
       "Bash(git diff *)",
       "Bash(git log *)",
       "Bash(git branch *)",
-      "Bash(git stash *)",
       "Bash(git add *)",
       "Bash(git commit *)",
       "Bash(git fetch *)",
@@ -54,6 +53,14 @@
       "NotebookEdit(**/.claude/hooks/**)",
       "NotebookEdit(**/.claude/settings.json)",
       "NotebookEdit(**/.claude/settings.local.json)",
+
+      "Bash(git reset --hard*)",
+      "Bash(git clean -f*)",
+      "Bash(git clean -d*)",
+      "Bash(git checkout -- *)",
+      "Bash(git restore *)",
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
 
       "Agent(general-purpose)",
       "Agent(claude)"
@@ -99,6 +106,12 @@
             "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/orchestrator-only-git.sh",
             "timeout": 10,
             "statusMessage": "Checking git ownership..."
+          },
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/require-review-receipt.sh",
+            "timeout": 15,
+            "statusMessage": "Checking the review gate..."
           }
         ]
       },

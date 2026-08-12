@@ -128,13 +128,16 @@ Work flows through a fixed chain and never through a single agent start-to-finis
   spec the builder swarm implements and reviews built UI against it; writes no
   files itself.
 
-**The org is enforced, not just described.** Two `PreToolUse` guards hold the
+**The org is enforced, not just described.** Three `PreToolUse` guards hold the
 boundaries the roles above only state: `orchestrator-only-git.sh` blocks every
-git/gh *write* (and any shell edit of `.claude/hooks` or `.claude/settings`) from
-anything running as a subagent — read-only git stays available so delegates can
-verify their own work — and `role-based-dispatch.py` rejects a dispatch that
-names no role (which would silently run as `general-purpose` with every tool,
-including `Agent`) and stops any non-orchestrator from spawning agents at all.
+git/gh *write* (and any shell edit of `.claude/hooks`, `.claude/settings`, or
+`.claude/receipts`) from anything running as a subagent — read-only git stays
+available so delegates can verify their own work; `role-based-dispatch.py`
+rejects a dispatch that names no role (which would silently run as
+`general-purpose` with every tool, including `Agent`) and stops any
+non-orchestrator from spawning agents at all; and `require-review-receipt.sh`
+blocks a merge into a protected branch until ≥2 independent reviewers are on
+record against the exact commit being merged (see the Review Gate below).
 
 **The loop**: task-manager releases a **wave of independent tasks** → the
 orchestrator runs each through the pipeline concurrently: architect returns a
@@ -210,6 +213,17 @@ and self-approved is never merged.** Run your review command (or the reviewer
 agents) on the diff, fix or explicitly waive each finding, note the outcome on
 the PR, and require green CI (typecheck / lint / test / build, plus security /
 dependency checks if configured).
+
+**This gate is enforced, not merely stated.** `require-review-receipt.sh` blocks
+`gh pr merge` — and any `git merge` into a protected branch — unless the
+orchestrator has written `.claude/receipts/<branch>.json` naming **≥2 distinct
+reviewers**, with no unresolved verdict (each is `pass`, `approved`, or an
+explicit `waived` with a reason), and a `head_sha` that **matches the branch tip**
+— so a receipt goes stale the moment another commit lands, and the review must be
+re-run. Only the orchestrator can write a receipt; a subagent writing its own
+would be self-approval, and both the Edit/Write guard and the shell guard reject
+it. The audited escape hatch is `CLAUDE_SKIP_REVIEW_RECEIPT=1`, and using it
+should be announced.
 
 ## Spec Engine (MANDATORY)
 

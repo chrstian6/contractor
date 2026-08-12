@@ -159,6 +159,8 @@ async function main() {
 
   console.log(`\n✓ Contractor installed — ${added} added, ${replaced} replaced, ${skipped} skipped.`);
 
+  ignoreReceipts();
+
   const mode = await chooseApprovalMode();
   rl.close();
   applyApprovalMode(mode);
@@ -169,6 +171,22 @@ async function main() {
   console.log(`  3. Set the orchestrator model in your client:  /model claude-fable-5`);
   console.log(`  4. Work on a branch — Contractor is now driving.`);
   console.log(`\nChange the approval mode any time with  /auto-approve [status|on|readonly|off]\n`);
+}
+
+// ---- review receipts are local run artifacts, not source ----
+
+function ignoreReceipts() {
+  const RULE = '.claude/receipts/';
+  const gi = path.join(DEST, '.gitignore');
+  try {
+    const current = fs.existsSync(gi) ? fs.readFileSync(gi, 'utf8') : '';
+    if (current.split(/\r?\n/).some((l) => l.trim() === RULE)) return;
+    const prefix = current === '' ? '' : current.endsWith('\n') ? '\n' : '\n\n';
+    fs.appendFileSync(gi, `${prefix}# Contractor review receipts (local run artifacts)\n${RULE}\n`);
+    console.log(`  + .gitignore   ${RULE}`);
+  } catch (err) {
+    console.log(`  ! could not add '${RULE}' to .gitignore (${err.message}) — add it yourself.`);
+  }
 }
 
 // ---- onboarding: how much should Claude ask before it acts? ----

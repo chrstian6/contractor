@@ -57,8 +57,11 @@ that none do.
 
 ## STEP 2 — LOAD the context you plan against
 
-- `CLAUDE.md` — the delegation org, the review gate, the branch protocol. Always.
-- `.claude/rules/` — every file that applies to this task.
+- `.claude/rules/delegation.md` — **always.** Roles, reviewer scoping, brief
+  anatomy, the execution constraints. Your primary reference.
+- `.claude/rules/orchestration.md` — **always.** Wave shape, frozen contracts,
+  worktrees, and the traps each rule was paid for.
+- `.claude/rules/verification.md` — when the task needs a gate or a migration.
 - `{{VAULT_PATH}}` — prior decisions, plans and gotchas for this surface.
 - `{{SPEC_SOURCE}}` — when the task ports or verifies existing behavior.
 

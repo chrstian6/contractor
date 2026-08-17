@@ -16,13 +16,17 @@ HOOK = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
 
 cases = [
     # (label, payload, expect_denied)
-    ("orchestrator -> builder",
+    ("main thread -> builder",
      {"tool_name": "Agent", "tool_input": {"subagent_type": "builder", "prompt": "x"}}, False),
-    ("orchestrator -> planner",
+    ("main thread -> planner",
      {"tool_name": "Agent", "tool_input": {"subagent_type": "planner", "prompt": "x"}}, False),
-    ("orchestrator -> security-reviewer",
+    ("main thread -> security-reviewer",
      {"tool_name": "Agent", "tool_input": {"subagent_type": "security-reviewer", "prompt": "x"}}, False),
-    ("orchestrator -> Explore (builtin, allowed)",
+    # There is no orchestrator agent — the orchestrator IS the main thread, so
+    # dispatching one would put a second one below it holding Agent and git.
+    ("dispatching an 'orchestrator' agent",
+     {"tool_name": "Agent", "tool_input": {"subagent_type": "orchestrator", "prompt": "x"}}, True),
+    ("main thread -> Explore (builtin, allowed)",
      {"tool_name": "Agent", "tool_input": {"subagent_type": "Explore", "prompt": "x"}}, False),
 
     # The planner plans the wave but never dispatches it. That is what keeps

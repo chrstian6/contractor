@@ -103,8 +103,8 @@ the code, and you can say what you grepped.
 
 Write the code and the tests for the logic you build.
 
-Follow the repo's code-quality rules (`.claude/rules/code-quality.md`): no
-premature abstractions, no dead code, WHY-comments only, conventional naming.
+Follow `.claude/rules/code-quality.md`: no premature abstractions, no dead code,
+WHY-comments only, conventional naming.
 Match the surrounding code's idiom, comment density, and structure. Your diff
 passes through independent review before merge — write it to survive an
 adversarial reader.

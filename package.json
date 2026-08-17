@@ -1,6 +1,6 @@
 {
   "name": "contractor-kit",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "A disciplined, delegation-driven workflow for Claude. Installs CLAUDE.md + .claude/ agents, hooks, and permissions into any repo.",
   "bin": {
     "contractor": "bin/cli.js"

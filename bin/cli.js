@@ -77,7 +77,14 @@ if (SUBCMD === 'fill') {
 
   const targets = ['CLAUDE.md'];
   const agentsDir = path.join(DEST, '.claude', 'agents');
-  if (fs.existsSync(agentsDir)) for (const f of fs.readdirSync(agentsDir)) if (f.endsWith('.md')) targets.push(path.join('.claude', 'agents', f));
+  // Recurse: agents live one folder deep (.claude/agents/<name>/AGENT.md), and a
+  // flat readdir here would silently fill nothing — leaving every {{PLACEHOLDER}}
+  // in every agent definition unreplaced while still reporting success.
+  if (fs.existsSync(agentsDir)) {
+    for (const rel of walk(agentsDir, path.join('.claude', 'agents'), [])) {
+      if (rel.endsWith('.md')) targets.push(rel);
+    }
+  }
 
   let filled = 0;
   for (const rel of targets) {
@@ -120,7 +127,9 @@ function walk(dir, base, out) {
 const files = walk(TEMPLATE, '', []);
 
 // Hooks and scripts are invoked directly by the engine, so they must land +x.
-const EXECUTABLE = /^\.claude\/(hooks|scripts)\/.*\.(sh|py)$/;
+// `agents/_lib` holds learn.sh, which every agent calls as a shell command at the
+// start and end of its run — without +x the self-improvement loop dies on install.
+const EXECUTABLE = /^\.claude\/(hooks|scripts|agents\/_lib)\/.*\.(sh|py)$/;
 
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 const ask = (q) => new Promise((res) => rl.question(q, (a) => res(a.trim().toLowerCase())));

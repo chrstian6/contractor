@@ -139,6 +139,28 @@ non-orchestrator from spawning agents at all; and `require-review-receipt.sh`
 blocks a merge into a protected branch until ≥2 independent reviewers are on
 record against the exact commit being merged (see the Review Gate below).
 
+**Every agent is a run procedure, and every agent learns.** Each role lives in
+`.claude/agents/<name>/AGENT.md` as numbered steps, each with a **DONE WHEN**
+condition — not a prose prompt. Every procedure opens with a RECALL step and
+closes with a LEARN step, wired to `.claude/agents/_lib/learn.sh`:
+
+```
+run N   step 1  →  learn.sh --list <agent>    reads that agent's LEARNINGS.md into context
+run N   step Z  →  learn.sh <agent> ...       appends what this run discovered
+run N+1 step 1  →  reads it back
+```
+
+So a footgun discovered on one run is in context on the next. Entries carry a
+fixed **Trigger / Lesson / Guard / Promoted** schema and dedupe on trigger+lesson.
+
+**Agents append to `LEARNINGS.md`; they never edit `AGENT.md`** — theirs or
+anyone's. That separation is the safety property: an agent that can rewrite its
+own instructions can quietly delete the constraint blocking it, which is what
+"never edit your own guards" exists to prevent. Promotion — folding a recurring
+lesson into `AGENT.md`, a rule, or (best) an executable guard — is the
+orchestrator's job alone, prompted automatically once an agent passes 12 entries.
+See `.claude/agents/README.md`.
+
 **The loop**: task-manager releases a **wave of independent tasks** → the
 orchestrator runs each through the pipeline concurrently: architect returns a
 design (no code) → orchestrator reviews and ENHANCES the design (re-scopes,

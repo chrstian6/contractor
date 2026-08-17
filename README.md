@@ -31,9 +31,14 @@ template/                       # the payload copied into a target repo:
   CLAUDE.md                     #   Claude's instructions (Research → Plan → Execute → Review)
   contractor.config.example     #   the placeholders to fill, once per project
   .claude/
-    agents/                     #   orchestrator, task-manager, architect, builder, auditor,
-                                #   frontend-designer, reviewer, code-reviewer, security-reviewer,
-                                #   pr-test-analyzer, performance-reviewer, silent-failure-hunter, qa-tester
+    agents/<name>/AGENT.md      #   one folder per agent — orchestrator, task-manager, architect,
+                                #   builder, auditor, frontend-designer, reviewer, code-reviewer,
+                                #   security-reviewer, pr-test-analyzer, performance-reviewer,
+                                #   silent-failure-hunter, qa-tester. Each is a numbered RUN
+                                #   PROCEDURE with a DONE WHEN per step, not a prose prompt.
+    agents/<name>/LEARNINGS.md  #   append-only; what that agent learned, read back on its next run
+    agents/_lib/learn.sh        #   the self-improvement loop (see below)
+    agents/README.md            #   the layout, the loop, and the promotion pass
     hooks/                      #   secret scan, dangerous-command block, file protection,
                                 #   orchestrator-only git, role-based dispatch, review-receipt
                                 #   merge gate, session context, optional auto-approval
@@ -54,6 +59,8 @@ template/                       # the payload copied into a target repo:
 ## Features
 
 - **Delegation org, not a lone agent.** Work flows through a fixed chain — orchestrator (owns strategy + git) → task-manager (backlog) → architect (design only) → builder swarm (parallel) → independent reviewers. No agent both writes code and approves it.
+- **Agents are run procedures, not prompts.** Each role is numbered steps with a **DONE WHEN** condition per step, so completion is checkable rather than vibed — by the agent, and by whoever reads the hand-back.
+- **The agents get better as you use them.** Every procedure opens with a RECALL step and closes with a LEARN step, wired to `learn.sh`. A footgun discovered on one run is in context on the next, in a fixed `Trigger / Lesson / Guard / Promoted` schema that dedupes so the same lesson is one entry, not forty. The `Guard` field is the point: it pushes each lesson toward becoming a lint rule, test, or script rather than more prose — because prose is obeyed only when noticed. **Agents append to `LEARNINGS.md` and never edit their own `AGENT.md`**, so self-improvement can't become an agent deleting the constraint that blocks it; promotion is the orchestrator's job, prompted automatically at 12 entries.
 - **Parallel task waves.** The task-manager releases *multiple* independent tasks at once and keeps the pipeline full — serializing only true dependencies — so the builder swarm is never starved.
 - **Research → Plan → Execute → Review.** It investigates and plans before writing a line; nothing skips ahead.
 - **Two intake modes.** Point it at a reference (legacy app, API contract, design) → **parity mode**, where an auditor owns "done"; give it a fresh goal → **planning mode**, where the task-manager owns "done."

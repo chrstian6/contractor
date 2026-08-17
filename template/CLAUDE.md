@@ -35,7 +35,7 @@ This is a cheap decision and does not need a delegate.
 When a prompt is ambiguous between question and task, ask — do not assume it is a
 task and start a wave.
 
-### Step 1 — `planner` plans, on the max-reasoning model
+### Step 1 — `planner` plans, on Fable 5
 
 `planner` verifies the premise, sizes the pipeline (TRIVIAL / FAST / HEAVY),
 scopes the reviewer tier, and returns a **complete dispatch plan**: which agents,
@@ -44,8 +44,9 @@ and the alternative it rejected.
 
 **Why the role exists:** the main thread's model comes from your client's model
 picker and **cannot be pinned from a file**, so the max-reasoning tier could never
-be guaranteed for planning. `planner`'s frontmatter *can* be pinned, so the
-expensive reasoning is guaranteed even when the main thread is on a cheaper model.
+be guaranteed for planning. `planner`'s frontmatter *can* be pinned — and is, to Fable 5 —
+so the expensive reasoning is guaranteed even when the main thread is on a
+cheaper model.
 It holds no `Agent`, `Edit` or `Write` tool, so nesting stays capped at 3 levels
 and git stays in exactly one place. It plans the *execution*; `architect` still
 designs the *solution*, and only when the plan calls for it.
@@ -237,6 +238,12 @@ Map the tiers to whatever models you run. The pattern matters more than the name
   client's model picker (`/model claude-fable-5`), not in an agent file, because
   the orchestrator *is* the main thread. **The orchestrator must run on Fable 5
   by default** — override only deliberately.
+- **`planner`** → **pinned to Fable 5 in its own file, and deliberately not
+  configurable.** Every other tier maps to a `contractor.config` value; this one
+  does not, because the role exists precisely to guarantee max reasoning for
+  planning when the main thread cannot be pinned. A configurable planner
+  guarantees nothing. Change it only by editing
+  `.claude/agents/planner/AGENT.md` and knowing why.
 - **Thinking tier** (task-manager, architect, auditor, all reviewers) → a strong
   reasoning model. Default: `{{THINKING_MODEL}}`.
 - **Builder swarm** → a fast, cheap model for high-throughput parallel execution.

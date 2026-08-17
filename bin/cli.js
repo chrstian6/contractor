@@ -129,7 +129,7 @@ const files = walk(TEMPLATE, '', []);
 // Hooks and scripts are invoked directly by the engine, so they must land +x.
 // `agents/_lib` holds learn.sh, which every agent calls as a shell command at the
 // start and end of its run — without +x the self-improvement loop dies on install.
-const EXECUTABLE = /^\.claude\/(hooks|scripts|agents\/_lib)\/.*\.(sh|py)$/;
+const EXECUTABLE = /^(\.claude\/(hooks|scripts|agents\/_lib)\/.*\.(sh|py)|scripts\/verify\/.*\.mjs)$/;
 
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 const ask = (q) => new Promise((res) => rl.question(q, (a) => res(a.trim().toLowerCase())));

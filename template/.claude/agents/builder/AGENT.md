@@ -40,23 +40,18 @@ that none do.
 
 ## STEP 2 — CHECK for a skill or plugin that already does this
 
-Before writing code from scratch, check whether an installed **skill** or
-**plugin** already does the job. These are first-class tools, not optional extras.
+Skills and plugins are first-class tools, not optional extras.
 
-1. **Scan the available list** surfaced in the session. Only ever invoke skills
-   that appear in it — never guess a name.
-2. **If a skill matches the slice, invoking it is a BLOCKING first step** — do it
-   before generating your own solution, not after. Never just *mention* a skill;
-   actually invoke it via the `Skill` tool or its `/name`.
-3. When the brief names a skill with a leading slash (`/test-writer`,
-   `/refactor`), that is a direct instruction to invoke it.
-4. **Prefer a skill over a hand-rolled equivalent** — it encodes the project's
-   conventions; your invention does not.
-5. **A skill's output is still your work.** Review, adapt and verify it against
-   the design and the acceptance criteria. It gets no pass on the review gate.
-6. **Don't fabricate capabilities.** If no skill fits, build it directly. If the
-   slice clearly *wants* a capability that isn't installed, note it as a finding
-   rather than guessing at a command that may not exist.
+- **Scan the session's available list.** Only invoke names that appear in it —
+  never guess one, and never merely *mention* a skill instead of invoking it.
+- **A matching skill is a BLOCKING first step** — invoke it before generating
+  your own solution, not after. A brief naming `/skill-name` is an instruction.
+- **Prefer a skill to a hand-rolled equivalent**: it encodes the project's
+  conventions; your invention does not.
+- **Its output is still your work** — review and verify it against the design.
+  It gets no pass on the review gate.
+- **Don't fabricate capabilities.** If none fits, build it directly; if the slice
+  clearly wants one that isn't installed, report that as a finding.
 
 **DONE WHEN:** you have either invoked the matching skill or confirmed none fits.
 
@@ -74,6 +69,35 @@ Before writing code from scratch, check whether an installed **skill** or
 
 **DONE WHEN:** you have listed the exact files you will touch and confirmed none
 is a shared surface.
+
+## STEP 3.5 — VERIFY THE BRIEF'S NAMED ARTIFACTS
+
+**A brief is a lead, not a fact.** Resolve everything it names against the code
+before you edit. This is the most expensive recurring failure a delegation org
+has: briefs name modules that do not exist, controls that live in sibling files,
+and components whose real render path runs through a file the list never
+mentioned.
+
+1. **Every named file and symbol exists, and is the one that runs.** Grep for it.
+   `node scripts/verify/render-scope.mjs <file>` answers "which entry points
+   actually reach this file, and which tests will an edit here tax".
+2. **An invariant claim is checked against the WHOLE module, not your files.**
+   When a brief says "no code under `X` may reference `Y`", grep all of `X`
+   before reporting compliance — a sibling file carrying the same reference is a
+   separate slice to report, not a silent fix outside your list.
+3. **A claimed defect is read before it is fixed.** When a brief or a mid-task
+   correction asserts something is broken, read that exact function and its
+   existing tests first. Corrections have asserted defects the code already
+   handled; building the "fix" made it worse.
+4. **A sweep greps the whole tree for every name**, not just the obvious file —
+   catalog fields, error types and copy constants have consumers well outside
+   the file that appears to own them.
+
+**If a check fails, STOP and report the discrepancy.** Do not build the nearest
+plausible thing.
+
+**DONE WHEN:** every file, symbol and claim the brief names is resolved against
+the code, and you can say what you grepped.
 
 ## STEP 4 — BUILD the slice
 

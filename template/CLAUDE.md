@@ -22,6 +22,56 @@
 
 ## Task Intake & Routing (how a prompt becomes work)
 
+### Step 0 — three buckets, decided by the main thread, first
+
+This is a cheap decision and does not need a delegate.
+
+| Bucket | Looks like | What happens |
+|---|---|---|
+| **Question** | "why is X", "does Y exist", "what does this do" | **Answer in-thread.** No agents, no branch, no ceremony. A question is not a task. |
+| **TRIVIAL** | a config value, a copy fix, a version bump, a dead-code deletion | **Do it in-thread.** Delegation overhead must never exceed the task. |
+| **Real task** | anything that changes behavior, touches a surface, or needs more than one edit | **Dispatch `planner`.** |
+
+When a prompt is ambiguous between question and task, ask — do not assume it is a
+task and start a wave.
+
+### Step 1 — `planner` plans, on the max-reasoning model
+
+`planner` verifies the premise, sizes the pipeline (TRIVIAL / FAST / HEAVY),
+scopes the reviewer tier, and returns a **complete dispatch plan**: which agents,
+how many, in what order, the brief for each, the frozen contracts, plus its risks
+and the alternative it rejected.
+
+**Why the role exists:** the main thread's model comes from your client's model
+picker and **cannot be pinned from a file**, so the max-reasoning tier could never
+be guaranteed for planning. `planner`'s frontmatter *can* be pinned, so the
+expensive reasoning is guaranteed even when the main thread is on a cheaper model.
+It holds no `Agent`, `Edit` or `Write` tool, so nesting stays capped at 3 levels
+and git stays in exactly one place. It plans the *execution*; `architect` still
+designs the *solution*, and only when the plan calls for it.
+
+### Step 2 — the owner approves the plan (MANDATORY)
+
+**A returned plan is never executed straight away.** Present it and ask for one of:
+
+- **Go with the plan** — dispatch it as written.
+- **Re-plan** — the owner says what is wrong; re-dispatch `planner` with that
+  feedback *and the rejected plan*, so it does not return the same shape.
+- **Cancel** — drop it. Nothing is dispatched, no branch is cut.
+
+Present the lane, the wave size, the agents, what each touches, and the risks the
+planner named. **A plan nobody can check is not a gate.**
+
+This is the one approval *before* work starts; the review gate still runs after.
+They are different gates and neither replaces the other.
+
+**Under `auto-approve all`** — an unattended loop, nobody watching a prompt — state
+the plan and proceed rather than blocking on an approval no one is present to
+give. Stop and ask anyway if the plan turns out to involve a product/scope
+decision, a destructive action, or a missing credential.
+
+### Then: the two intake modes
+
 When a task arrives by prompt, the **first decision** is whether it names a
 **reference** — a spec source, legacy app, design, ticket, doc, or existing
 implementation the result must match.
@@ -151,7 +201,9 @@ run N+1 step 1  →  reads it back
 ```
 
 So a footgun discovered on one run is in context on the next. Entries carry a
-fixed **Trigger / Lesson / Guard / Promoted** schema and dedupe on trigger+lesson.
+fixed **Trigger / Lesson / Guard / Promoted** schema and dedupe on trigger+lesson,
+and recall is capped at the 12 newest — an unbounded LEARNINGS.md otherwise becomes
+the most expensive thing an agent reads.
 
 **Agents append to `LEARNINGS.md`; they never edit `AGENT.md`** — theirs or
 anyone's. That separation is the safety property: an agent that can rewrite its

@@ -69,6 +69,61 @@ that the reference does not cover it.
 
 **DONE WHEN:** tokens located, stack named, one principle chosen and justified.
 
+## STEP 3.5 — MEASURE, don't reason
+
+Design decisions that rest on an assumed number are the most common way a UI
+spec turns out wrong. Three rules, all learned the hard way.
+
+**Resolve the brief's artifacts before consuming them.** Briefs have named
+modules that did not exist, quoted a breakpoint rationale that pointed at the
+wrong split, and handed down a contrast table whose numbers no longer held. Grep
+every named module; recompute every handed-down number. To find out which guard
+actually binds, **mutate to the requested value and run the test before rewriting
+anything** — a guard blamed for blocking a change has turned out not to bite
+until far past the requested value.
+
+```bash
+node scripts/verify/render-scope.mjs <file>   # which entry points reach it; which tests an edit taxes
+```
+
+Run it before editing a shared primitive — both to confirm the change's real
+scope, and to see which test files your edit will tax. Adding a hook or context
+dependency to a leaf component makes every ancestor's test need the matching
+provider mock, including tests owned by a slice you must not edit.
+
+**Contrast is a lookup, not a computation — and the lookup is a command:**
+
+```bash
+node scripts/verify/contrast.mjs                                # every pair, every scope
+node scripts/verify/contrast.mjs --pair <ink> <ground> --alpha 0.05
+```
+
+Never write ratios into a document. A written ratio goes stale the moment a
+ground moves, and translucent inks are worst: **a token's alpha is a function of
+the ground beneath it, so any background change silently retunes every alpha
+above it.** The script reads live tokens and composites alpha onto the real
+ground, so it cannot drift.
+
+**Measuring geometry is a command too:**
+
+```bash
+node scripts/verify/measure-dom.mjs <page.html> --select ".row" --widths 320,375,768,1024
+```
+
+It handles the traps that burn attempts: **headless Chrome floors `innerWidth` at
+500px**, so asking for 320 silently measures 500 — the script drops to a
+fixed-width container below the floor and says so, because media queries cannot
+fire there. It also loads a real page rather than a `srcdoc` iframe, which
+mangles class attributes through double-escaping.
+
+Two findings that survive as rulings rather than numbers: a **hairline border
+never carries meaning on its own** — pair it with a value change; and a
+`white-space: nowrap` column sizes to its widest row across the whole table, so
+place variable content in columns that can absorb width, not by topical fit.
+
+**DONE WHEN:** every number you are designing against was measured or looked up,
+not assumed.
+
 ## STEP 4 — SPECIFY to the craft standard
 
 **State assumptions explicitly** (light vs dark, mobile vs desktop priority,

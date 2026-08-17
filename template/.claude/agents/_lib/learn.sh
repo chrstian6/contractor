@@ -52,6 +52,10 @@ fi
 # file, or — best — an executable guard.
 PROMOTE_AT=12
 
+# How many of the newest entries `--list` replays into an agent's context. This
+# is the hard bound on recall cost; PROMOTE_AT above is only the nudge.
+RECALL_MAX=12
+
 die() { printf 'learn.sh: %s\n' "$1" >&2; exit 2; }
 
 usage() {
@@ -72,8 +76,38 @@ if [ "$1" = "--list" ]; then
   FILE="$AGENTS_DIR/$2/LEARNINGS.md"
   # Exits 0 when empty: this runs as step 1 of every agent's procedure, and a
   # first run with nothing learned yet is the normal case, not an error.
-  if [ -f "$FILE" ]; then cat "$FILE"; else
+  if [ ! -f "$FILE" ]; then
     printf 'No learnings recorded for %s yet — this is the first run.\n' "$2"
+    exit 0
+  fi
+
+  # BOUNDED RECALL. Every dispatch pays this file in context, so an unbounded
+  # LEARNINGS.md quietly becomes the most expensive thing an agent reads. It
+  # has already happened in practice: one agent reached 29 entries / 34.8 KB —
+  # larger than its own definition — because the promotion pass is advisory and
+  # nobody ran it. A warning that can be ignored is not a bound.
+  #
+  # So recall is capped at the newest RECALL_MAX entries. Older ones stay in the
+  # file (the record is the point) but stop being re-read every run: an entry
+  # that still matters after RECALL_MAX newer ones have landed belongs in
+  # AGENT.md or a guard, which is exactly what promotion is for.
+  TOTAL="$(grep -c '^<!-- key:' "$FILE" || true)"
+  if [ "$TOTAL" -le "$RECALL_MAX" ]; then
+    cat "$FILE"
+  else
+    # Header (everything before the first entry), then the last RECALL_MAX entries.
+    awk '/^## [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]/{exit} {print}' "$FILE"
+    printf '> Showing the %s most recent of %s learnings. Older entries are still in\n' "$RECALL_MAX" "$TOTAL"
+    printf '> this file but are past the recall window — they are overdue for promotion\n'
+    printf '> into AGENT.md, a rule, or a guard. Tell the orchestrator.\n\n'
+    awk -v keep="$RECALL_MAX" '
+      /^## [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]/ { n++; starts[n] = NR }
+      { line[NR] = $0 }
+      END {
+        from = starts[n - keep + 1]
+        for (i = from; i <= NR; i++) print line[i]
+      }
+    ' "$FILE"
   fi
   exit 0
 fi

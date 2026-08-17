@@ -64,7 +64,7 @@ def norm(value):
 # dispatch.
 ALLOWED_TYPES = {norm(t) for t in (
     "architect", "auditor", "builder", "code-reviewer", "frontend-designer",
-    "orchestrator", "performance-reviewer", "pr-test-analyzer", "qa-tester",
+    "orchestrator", "performance-reviewer", "planner", "pr-test-analyzer", "qa-tester",
     "reviewer", "security-reviewer", "silent-failure-hunter", "task-manager",
     "Explore", "Plan",
 )}

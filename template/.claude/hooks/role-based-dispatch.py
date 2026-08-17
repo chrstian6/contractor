@@ -62,9 +62,20 @@ def norm(value):
 # anything unrecognised. Explore and Plan are included deliberately: both carry
 # `disallowedTools: [Agent, ...]`, so they are legitimately roleless AND cannot
 # dispatch.
+# There is deliberately no "orchestrator" entry: the orchestrator IS the main
+# thread. Dispatching one would put a second orchestrator at L2 holding both
+# `Agent` and git — spawning its own subagents (breaching the 3-level cap) and
+# running git from below the main thread. `orchestrator-only-git.sh` blocks git
+# writes from any subagent anyway, so it could never do the job that defines it.
+# Omitting it here makes that a denial rather than an unresolvable agent type.
+#
+# `planner` is the sanctioned way to get the PLAN move onto a pinned
+# max-reasoning model without reintroducing that second orchestrator: it is NOT
+# in DISPATCHING_ROLES and holds no Agent or write tools, so it returns a plan
+# and the main thread executes it.
 ALLOWED_TYPES = {norm(t) for t in (
     "architect", "auditor", "builder", "code-reviewer", "frontend-designer",
-    "orchestrator", "performance-reviewer", "pr-test-analyzer", "qa-tester",
+    "performance-reviewer", "planner", "pr-test-analyzer", "qa-tester",
     "reviewer", "security-reviewer", "silent-failure-hunter", "task-manager",
     "Explore", "Plan",
 )}

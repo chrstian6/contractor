@@ -77,7 +77,14 @@ if (SUBCMD === 'fill') {
 
   const targets = ['CLAUDE.md'];
   const agentsDir = path.join(DEST, '.claude', 'agents');
-  if (fs.existsSync(agentsDir)) for (const f of fs.readdirSync(agentsDir)) if (f.endsWith('.md')) targets.push(path.join('.claude', 'agents', f));
+  // Recurse: agents live one folder deep (.claude/agents/<name>/AGENT.md), and a
+  // flat readdir here would silently fill nothing — leaving every {{PLACEHOLDER}}
+  // in every agent definition unreplaced while still reporting success.
+  if (fs.existsSync(agentsDir)) {
+    for (const rel of walk(agentsDir, path.join('.claude', 'agents'), [])) {
+      if (rel.endsWith('.md')) targets.push(rel);
+    }
+  }
 
   let filled = 0;
   for (const rel of targets) {
@@ -120,7 +127,9 @@ function walk(dir, base, out) {
 const files = walk(TEMPLATE, '', []);
 
 // Hooks and scripts are invoked directly by the engine, so they must land +x.
-const EXECUTABLE = /^\.claude\/(hooks|scripts)\/.*\.(sh|py)$/;
+// `agents/_lib` holds learn.sh, which every agent calls as a shell command at the
+// start and end of its run — without +x the self-improvement loop dies on install.
+const EXECUTABLE = /^(\.claude\/(hooks|scripts|agents\/_lib)\/.*\.(sh|py)|scripts\/verify\/.*\.mjs)$/;
 
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 const ask = (q) => new Promise((res) => rl.question(q, (a) => res(a.trim().toLowerCase())));
@@ -159,6 +168,8 @@ async function main() {
 
   console.log(`\n✓ Contractor installed — ${added} added, ${replaced} replaced, ${skipped} skipped.`);
 
+  ignoreReceipts();
+
   const mode = await chooseApprovalMode();
   rl.close();
   applyApprovalMode(mode);
@@ -169,6 +180,22 @@ async function main() {
   console.log(`  3. Set the orchestrator model in your client:  /model claude-fable-5`);
   console.log(`  4. Work on a branch — Contractor is now driving.`);
   console.log(`\nChange the approval mode any time with  /auto-approve [status|on|readonly|off]\n`);
+}
+
+// ---- review receipts are local run artifacts, not source ----
+
+function ignoreReceipts() {
+  const RULE = '.claude/receipts/';
+  const gi = path.join(DEST, '.gitignore');
+  try {
+    const current = fs.existsSync(gi) ? fs.readFileSync(gi, 'utf8') : '';
+    if (current.split(/\r?\n/).some((l) => l.trim() === RULE)) return;
+    const prefix = current === '' ? '' : current.endsWith('\n') ? '\n' : '\n\n';
+    fs.appendFileSync(gi, `${prefix}# Contractor review receipts (local run artifacts)\n${RULE}\n`);
+    console.log(`  + .gitignore   ${RULE}`);
+  } catch (err) {
+    console.log(`  ! could not add '${RULE}' to .gitignore (${err.message}) — add it yourself.`);
+  }
 }
 
 // ---- onboarding: how much should Claude ask before it acts? ----

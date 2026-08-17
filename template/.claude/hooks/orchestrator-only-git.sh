@@ -54,9 +54,9 @@ fi
 # is not covered by a path rule: `sed -i`, `cat >`, `chmod -x` would let a
 # delegate neuter the very hooks that bound it. The orchestrator (no agent_id)
 # is unaffected and reaches this file normally.
-if has "(^|[;&|(]|&&|>)[[:space:]]*[^;&|]*\\.claude/(hooks|settings)"; then
+if has "(^|[;&|(]|&&|>)[[:space:]]*[^;&|]*\\.claude/(hooks|settings|receipts)"; then
   if has "(sed[[:space:]]+-i|>|>>|tee|cp[[:space:]]|mv[[:space:]]|rm[[:space:]]|chmod|truncate|dd[[:space:]]|install[[:space:]])"; then
-    emit_deny "Blocked: '${AGENT_TYPE}' is a subagent and may not modify .claude/hooks or .claude/settings — those enforce its own boundaries. ${HANDOFF}"
+    emit_deny "Blocked: '${AGENT_TYPE}' is a subagent and may not modify .claude/hooks, .claude/settings, or .claude/receipts — those enforce its own boundaries (a self-written receipt is self-approval). ${HANDOFF}"
   fi
 fi
 

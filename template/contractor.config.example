@@ -22,7 +22,11 @@ OUT_OF_SCOPE="none"
 # --- Model tiers (map to whatever models you run) ---
 # Orchestrator is the main thread — set it with your client's model picker
 # (e.g. `/model claude-fable-5`). Default: Fable 5.
-ORCHESTRATOR_MODEL="claude-fable-5"   # the main thread — plans, reviews, owns git
+ORCHESTRATOR_MODEL="claude-fable-5"   # the main thread — reviews, approves, owns git
+# There is deliberately no PLANNER_MODEL. `planner` is pinned to Fable 5 in
+# .claude/agents/planner/AGENT.md because it exists to guarantee max reasoning
+# for planning when the main thread's model cannot be pinned from a file. A
+# configurable planner guarantees nothing.
 THINKING_MODEL="opus"                 # task-manager, architect, auditor, reviewers
 BUILDER_MODEL="sonnet"                # the builder swarm
 

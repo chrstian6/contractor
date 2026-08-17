@@ -1,6 +1,6 @@
 {
   "name": "contractor-kit",
-  "version": "1.2.0",
+  "version": "1.5.0",
   "description": "A disciplined, delegation-driven workflow for Claude. Installs CLAUDE.md + .claude/ agents, hooks, and permissions into any repo.",
   "bin": {
     "contractor": "bin/cli.js"
@@ -10,6 +10,15 @@
     "template/",
     "README.md"
   ],
+  "author": "christian <hansesgrina.06@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chrstian6/contractor.git"
+  },
+  "homepage": "https://github.com/chrstian6/contractor#readme",
+  "bugs": {
+    "url": "https://github.com/chrstian6/contractor/issues"
+  },
   "keywords": [
     "claude",
     "claude-code",

@@ -70,6 +70,15 @@ case "$PATH_LC" in
     emit deny "Cannot edit .env files" ;;
   .claude/hooks/*|*/.claude/hooks/*)
     emit deny "Cannot edit hook scripts. These enforce security boundaries." ;;
+  .claude/receipts/*|*/.claude/receipts/*)
+    # A review receipt is the evidence the merge gate checks. A reviewer that
+    # could write its own receipt would be self-approving — the exact thing the
+    # gate exists to prevent. Only the orchestrator (main thread, no agent_id)
+    # writes receipts.
+    AGENT_ID=$(printf '%s' "$INPUT" | jq -r '.agent_id // empty' 2>/dev/null || true)
+    if [ -n "$AGENT_ID" ]; then
+      emit deny "Cannot write a review receipt from a subagent — that would be self-approval. Report your verdict to the orchestrator, which owns the receipt."
+    fi ;;
   .claude/settings.json|*/.claude/settings.json|.claude/settings.local.json|*/.claude/settings.local.json)
     emit ask "Editing settings.json. This controls permissions and hooks. Confirm this change." ;;
 esac

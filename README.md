@@ -22,6 +22,36 @@ Contractor is a **project-agnostic distillation** of a battle-tested `CLAUDE.md`
 and `.claude/` setup — the personal paths, names, and one-project specifics
 stripped out and replaced with `{{PLACEHOLDERS}}` you fill once.
 
+## Upgrading from 1.x
+
+**2.0.0 changes the layout on disk.** The installer writes the new files but does
+not delete the old ones, so after upgrading an existing install you must remove
+what 1.x left behind:
+
+```bash
+npx contractor-kit            # writes the new layout
+rm .claude/agents/*.md        # remove the flat 1.x definitions (folders replace them)
+rm -rf .claude/agents/orchestrator   # if present — see below
+```
+
+Leave `.claude/agents/*/LEARNINGS.md` alone; those are your agents' memory.
+
+What changed, and why it is a major:
+
+- **Agents moved** from `.claude/agents/<name>.md` to
+  `.claude/agents/<name>/AGENT.md`. Leaving the flat files in place is not
+  harmless — two definitions with the same `name` in one directory collide, and
+  the winner is chosen by unsorted `readdir` order.
+- **The `orchestrator` agent is gone.** The orchestrator *is* the main thread;
+  dispatching one put a second below it holding both `Agent` and git. It is now
+  denied by the dispatch guard, so an install that still has the file will see
+  dispatches rejected. Its mandate moved to `.claude/rules/delegation.md`.
+- **`planner` is new**, and every real task now routes through it for a plan you
+  approve before anything is dispatched.
+- **`CLAUDE.md` shrank from ~28 KB to ~9 KB**, with the detail moved into
+  `.claude/rules/`. If you customised the old one, re-apply your changes to the
+  new file rather than restoring the old.
+
 ## What's inside
 
 ```

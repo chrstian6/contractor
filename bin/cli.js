@@ -129,7 +129,7 @@ const files = walk(TEMPLATE, '', []);
 // Hooks and scripts are invoked directly by the engine, so they must land +x.
 // `agents/_lib` holds learn.sh, which every agent calls as a shell command at the
 // start and end of its run — without +x the self-improvement loop dies on install.
-const EXECUTABLE = /^(\.claude\/(hooks|scripts|agents\/_lib)\/.*\.(sh|py)|scripts\/verify\/.*\.mjs)$/;
+const EXECUTABLE = /^(\.claude\/(hooks|scripts|agents\/_lib)\/.*\.(sh|py)|scripts\/(verify\/.*\.mjs|classify-change\.sh))$/;
 
 // ---- clean up a pre-2.0 install ---------------------------------------------
 // 2.0 moved agents from `.claude/agents/<name>.md` to

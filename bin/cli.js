@@ -131,6 +131,75 @@ const files = walk(TEMPLATE, '', []);
 // start and end of its run — without +x the self-improvement loop dies on install.
 const EXECUTABLE = /^(\.claude\/(hooks|scripts|agents\/_lib)\/.*\.(sh|py)|scripts\/verify\/.*\.mjs)$/;
 
+// ---- clean up a pre-2.0 install ---------------------------------------------
+// 2.0 moved agents from `.claude/agents/<name>.md` to
+// `.claude/agents/<name>/AGENT.md`, and removed the `orchestrator` role. The
+// copy above adds the new files but cannot know to remove the old ones, so an
+// upgraded repo ends up with BOTH — two definitions claiming the same agent
+// `name`, and an orchestrator file that the dispatch guard now denies. Telling
+// people to delete them in the README is a guard that only works when read.
+//
+// Nothing is deleted: leftovers move to `.claude/agents-1x-backup/`, which is
+// outside the directory the agent loader scans, so a stale `.md` cannot be
+// picked up from there either.
+function findLegacyAgents() {
+  const agentsDir = path.join(DEST, '.claude', 'agents');
+  if (!fs.existsSync(agentsDir)) return [];
+  const stale = [];
+  for (const e of fs.readdirSync(agentsDir, { withFileTypes: true })) {
+    const abs = path.join(agentsDir, e.name);
+    if (e.isFile() && e.name.endsWith('.md')) {
+      // A TOP-LEVEL .md carrying `name:` frontmatter is a pre-2.0 definition.
+      // The shipped agents/README.md has no frontmatter, so it never matches —
+      // the same test the agent loader itself uses to tell an agent from a doc.
+      let head = '';
+      try { head = fs.readFileSync(abs, 'utf8').slice(0, 2048); } catch { continue; }
+      if (/^---\s*\r?\n[\s\S]*?^name:\s*\S/m.test(head)) stale.push(e.name);
+    } else if (e.isDirectory() && e.name === 'orchestrator') {
+      // The role was removed in 2.0 — the orchestrator IS the main thread.
+      stale.push(e.name);
+    }
+  }
+  return stale;
+}
+
+function moveLegacyAgents(names) {
+  const agentsDir = path.join(DEST, '.claude', 'agents');
+  const backupDir = path.join(DEST, '.claude', 'agents-1x-backup');
+  fs.mkdirSync(backupDir, { recursive: true });
+  let moved = 0;
+  for (const n of names) {
+    const from = path.join(agentsDir, n);
+    let to = path.join(backupDir, n);
+    let i = 1;
+    while (fs.existsSync(to)) to = path.join(backupDir, `${n}.${i++}`);
+    try { fs.renameSync(from, to); moved++; }
+    catch (e) { console.log(`  could not move ${n}: ${e.message}`); }
+  }
+  return moved;
+}
+
+function cleanupLegacyInstall() {
+  const stale = findLegacyAgents();
+  if (!stale.length) return;
+
+  console.log(`\n  Cleaning up ${stale.length} leftover(s) from a pre-2.0 install:`);
+  for (const n of stale) console.log(`    .claude/agents/${n}`);
+  console.log(`  These collide with the new .claude/agents/<name>/AGENT.md layout —`);
+  console.log(`  two files claiming the same agent name — and 'orchestrator' is denied`);
+  console.log(`  by the dispatch guard in 2.0.`);
+
+  if (DRY) { console.log(`  would move them to .claude/agents-1x-backup/ (dry-run)`); return; }
+
+  // Automatic and unprompted, deliberately. Nothing is deleted — these move to
+  // .claude/agents-1x-backup/, outside the directory the agent loader scans — so
+  // there is nothing to consent to, and a prompt here would be one more thing
+  // that can hang or be dismissed on an upgrade that is already non-obvious.
+  const moved = moveLegacyAgents(stale);
+  console.log(`  ✓ Moved ${moved} to .claude/agents-1x-backup/ (nothing deleted; your`);
+  console.log(`    LEARNINGS.md files were not touched). Delete that folder once happy.`);
+}
+
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 const ask = (q) => new Promise((res) => rl.question(q, (a) => res(a.trim().toLowerCase())));
 
@@ -163,6 +232,10 @@ async function main() {
     console.log(`  ${exists ? 'replace' : 'add    '} ${rel}${exists && !NO_BACKUP ? '  (backup → ' + rel + '.bak)' : ''}`);
     exists ? replaced++ : added++;
   }
+
+  // Before the dry-run bail-out: a preview that omits the cleanup is not a
+  // preview of what the install actually does.
+  cleanupLegacyInstall();
 
   if (DRY) { rl.close(); console.log(`\nDry run: ${added} to add, ${replaced} to replace, ${skipped} skipped.`); return; }
 

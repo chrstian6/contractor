@@ -24,33 +24,32 @@ stripped out and replaced with `{{PLACEHOLDERS}}` you fill once.
 
 ## Upgrading from 1.x
 
-**2.0.0 changes the layout on disk.** The installer writes the new files but does
-not delete the old ones, so after upgrading an existing install you must remove
-what 1.x left behind:
+**Just run the installer — it cleans up after itself.**
 
 ```bash
-npx contractor-kit            # writes the new layout
-rm .claude/agents/*.md        # remove the flat 1.x definitions (folders replace them)
-rm -rf .claude/agents/orchestrator   # if present — see below
+npx contractor-kit
 ```
 
-Leave `.claude/agents/*/LEARNINGS.md` alone; those are your agents' memory.
+2.0 moved agents from `.claude/agents/<name>.md` to
+`.claude/agents/<name>/AGENT.md` and removed the `orchestrator` role. The
+installer detects the pre-2.0 files and **moves them to
+`.claude/agents-1x-backup/`** automatically — outside the directory the agent
+loader scans, so a stale definition cannot be picked up from there.
 
-What changed, and why it is a major:
+**Nothing is deleted**, and **your `LEARNINGS.md` files are never touched** —
+they are your agents' accumulated memory and the one thing an upgrade must not
+clear. Delete the backup folder yourself once you are happy. `--dry-run` shows
+you what it would move without moving anything.
 
-- **Agents moved** from `.claude/agents/<name>.md` to
-  `.claude/agents/<name>/AGENT.md`. Leaving the flat files in place is not
-  harmless — two definitions with the same `name` in one directory collide, and
-  the winner is chosen by unsorted `readdir` order.
-- **The `orchestrator` agent is gone.** The orchestrator *is* the main thread;
-  dispatching one put a second below it holding both `Agent` and git. It is now
-  denied by the dispatch guard, so an install that still has the file will see
-  dispatches rejected. Its mandate moved to `.claude/rules/delegation.md`.
-- **`planner` is new**, and every real task now routes through it for a plan you
-  approve before anything is dispatched.
-- **`CLAUDE.md` shrank from ~28 KB to ~9 KB**, with the detail moved into
-  `.claude/rules/`. If you customised the old one, re-apply your changes to the
-  new file rather than restoring the old.
+Why the leftovers matter rather than being harmless clutter: two files claiming
+the same agent `name` make which definition is live ambiguous, and an
+`orchestrator.md` left in place looks live but is **denied** by 2.0's dispatch
+guard — so it fails at dispatch rather than degrading quietly.
+
+One thing the installer cannot do for you: **if you customised `CLAUDE.md`**,
+it is overwritten (backed up to `CLAUDE.md.bak`) and it shrank from ~28 KB to
+~9 KB, with the detail moved into `.claude/rules/`. Re-apply your changes to the
+new file rather than restoring the old one.
 
 ## What's inside
 

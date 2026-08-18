@@ -92,7 +92,9 @@ task and start a wave.
 
 ### Step 1 — the planner plans, on Fable 5
 
-`planner` verifies the premise, sizes the pipeline (TRIVIAL / FAST / HEAVY),
+`planner` verifies the premise, sizes the pipeline (TRIVIAL / FAST / HEAVY —
+by running `scripts/classify-change.sh` where it has been configured, rather
+than judging),
 scopes the reviewer tier, and returns a **complete dispatch plan**: which agents,
 how many, in what order, the brief for each, the frozen contracts, plus its risks
 and the alternative it rejected.

@@ -85,11 +85,27 @@ it), or you have stopped and returned the correction.
 
 ## STEP 4 — SIZE THE PIPELINE to the risk, and SCOPE the reviewers
 
-Decide how much pipeline this task earns. **If the repo has a classifier script,
-run it rather than deriving the answer** — an enumerated list of risky paths beats
-a judgement call, and it cannot drift the way memory does.
+Decide how much pipeline this task earns. **Run the classifier rather than
+deriving the answer** — an enumerated list of risky paths beats a judgement call
+and cannot drift the way memory does:
 
-Without one, size it by what the change touches:
+```bash
+bash scripts/classify-change.sh
+```
+
+Three possible outcomes, and each means something different:
+
+- **FAST / HEAVY with reasons** — use it. Do not second-guess it; the paths it
+  matched are there because someone decided they were risky.
+- **Exit 3, UNCONFIGURED** — nobody has enumerated this repo's risky surfaces
+  yet. Size it yourself with the table below, **say in your plan that you derived
+  the size because the classifier is unconfigured**, and recommend filling in its
+  `HEAVY_PATHS` — that is a one-time edit that removes this judgement call
+  permanently.
+- **No such file** — same as unconfigured, and worth proposing the script.
+
+Deriving it yourself, or when no diff exists yet (a fresh feature — name the
+paths the task *will* touch and apply the same rules):
 
 | Size | Looks like | Pipeline |
 |---|---|---|

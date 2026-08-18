@@ -80,6 +80,8 @@ template/                       # the payload copied into a target repo:
                                 #   (the review gate), memory (the vault), code-quality
     tests/dispatch-role-matrix.py #  pins the dispatch guard: 12 cases, both directions
     settings.json               #   wires the hooks + a safe permission allow/deny list
+  scripts/classify-change.sh    # size a diff from paths, not judgement — fill in
+                                #   HEAVY_PATHS once; refuses to answer until you do
   scripts/verify/               # framework-agnostic probes the agents call by name:
     render-scope.mjs            #   which entry points reach a file; which tests an edit taxes
     contrast.mjs                #   WCAG ratios from live design tokens, alpha composited

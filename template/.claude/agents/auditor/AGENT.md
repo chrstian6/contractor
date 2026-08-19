@@ -40,7 +40,10 @@ audit, and grades that turned out wrong.
 Find the routes, components, data-access layer, schema, and migrations on each
 side, so your citations are **real file paths and not guesses**.
 
-**Confirm the reference tree with `ls` before concluding anything is missing.** A
+**Read the slice your domain names, not the tree.** A reference app can run to
+tens of megabytes; you were assigned one domain, so open that domain's files and
+say which paths you read. **Confirm the reference tree with `ls` before concluding
+anything is missing.** A
 depth-limited `find` that misses a deeply-nested directory will make you report a
 present tree as absent — which registers phantom work in the backlog.
 

@@ -37,6 +37,30 @@ block. This is deliberate:
 When you edit a definition, keep the shape: steps in execution order, one
 **DONE WHEN** each, commands as commands.
 
+## Load in proportion to the task
+
+An agent that loads everything it *might* need, every time, is not being thorough
+— it is being expensive, and whoever is waiting pays for it. Measured in a live
+run of one org's designer: **~121k tokens consumed before it had looked at a
+single screen**, against a ~13k floor. The cause was two steps marked MANDATORY
+that never said *how much*.
+
+Two rules that keep it bounded, and both belong in any step that reads something
+large:
+
+1. **Size the task first.** A fix, a surface, and a system are different jobs.
+   Say which one this is, and load for that. Naming the lane costs a sentence and
+   saves the difference between 17k and 121k.
+2. **Name the bound where the load happens.** "Read the vault" and "load the
+   skill" are unbounded instructions. "Read the one or two notes that match" and
+   "load the entry point and the references it names, never the directory" are
+   not. Put the size of the thing next to the instruction, so the cost is visible
+   at the point of decision.
+
+When you write a new step that reads a directory, a vault, or a skill, write the
+bound into the step. It is the same reasoning as bounded recall below: an
+instruction that can grow without limit eventually will.
+
 ## The self-improvement loop
 
 ```

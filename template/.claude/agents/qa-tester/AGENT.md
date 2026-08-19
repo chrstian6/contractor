@@ -46,7 +46,8 @@ Read the task's acceptance criteria and the relevant behavior in the spec source
 `{{SPEC_SOURCE}}`, plus the matching decision/gotcha notes in the vault
 (`{{VAULT_PATH}}`).
 
-Then walk the actual flow in this repo: **entry point → the handler / action /
+Read only the part of `{{SPEC_SOURCE}}` this task covers — a reference app is
+large, and the task names its slice. Then walk the actual flow in this repo: **entry point → the handler / action /
 route → the data mutation → what the caller or UI shows afterward.**
 
 **DONE WHEN:** you can describe the real path end to end, by file.

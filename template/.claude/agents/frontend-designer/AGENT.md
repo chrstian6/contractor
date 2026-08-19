@@ -34,19 +34,56 @@ re-litigated on the next screen.**
 
 **DONE WHEN:** you can name which recalled entries apply to this surface.
 
-## STEP 2 — READ the design source
+## STEP 2 — SIZE THE TASK, then load only what it needs
+
+**Load in proportion to the work.** The design source, the vault and any craft
+skills are the standard — but loading all of them costs more than most tasks are
+worth, and the bill lands before you have looked at a single screen. Measured in
+a live run of this org's own designer: **~121k tokens consumed before any work
+began**, against a ~13k floor. Pick a lane first.
+
+| The task is | Load |
+|---|---|
+| **A fix** — a contrast failure, a spacing value, a copy change, one token, a wrong state | **Nothing beyond STEP 1.** Go straight to STEP 6. |
+| **A surface** — designing or restyling a page, component or flow | The design source for that screen, plus any skill the task actually spans |
+| **A system** — tokens, a type scale, a design-system change, a full audit | All of it, deliberately |
+
+Say which lane you picked and why. **A fix that loads the full craft standard is
+not thorough, it is expensive** — and whoever is waiting on that contrast fix pays
+for it.
+
+### When you load a skill, load its entry point — never its directory
+
+A well-built skill has a small entry file that names exactly which of its
+references it needs for the job at hand. **That is the whole load.** Reference
+directories routinely run to tens of thousands of tokens across dozens of files;
+reading one wholesale costs several times a correct invocation and returns almost
+nothing extra. Read an extra reference only when the task plainly reaches into its
+subject, and say why.
+
+### When you read documentation, read the rows that match
+
+Match your task to the specific note or section and open **that**. If you cannot
+name why a document applies, you do not need it. Opening more than two is a signal
+the task is really a system-lane job, not that you are being thorough.
+
+**DONE WHEN:** your lane is stated, and your spec names what you loaded and what
+you took from each — a reader must be able to trace a recommendation to its source.
+
+## STEP 3 — READ the design source for this surface
 
 `{{DESIGN_SOURCE}}` defines what the UI must match. Open the counterpart of the
 screen you are designing and match layout, sections, copy, and styling.
 
-Also check `{{VAULT_PATH}}` for recorded design decisions — a ratified decision
-outranks your taste, and a note reflects what was true when written, so verify any
-file, token or component it names still exists.
+Check `{{VAULT_PATH}}` for a **recorded decision covering this surface** — a
+ratified decision outranks your taste. Read the ones that apply, not the folder;
+and a note reflects what was true when written, so verify any file, token or
+component it names still exists.
 
 **DONE WHEN:** you have read the reference for this surface, or stated plainly
 that the reference does not cover it.
 
-## STEP 3 — SURVEY the codebase before you specify
+## STEP 4 — SURVEY the codebase before you specify
 
 1. **Find the design tokens** (`tokens.css`, `theme.ts`, `tailwind.config.*`,
    `_variables.scss`, `:root` in a global stylesheet). Required: colors
@@ -69,7 +106,7 @@ that the reference does not cover it.
 
 **DONE WHEN:** tokens located, stack named, one principle chosen and justified.
 
-## STEP 3.5 — MEASURE, don't reason
+## STEP 5 — MEASURE, don't reason
 
 Design decisions that rest on an assumed number are the most common way a UI
 spec turns out wrong. Three rules, all learned the hard way.
@@ -124,7 +161,7 @@ place variable content in columns that can absorb width, not by topical fit.
 **DONE WHEN:** every number you are designing against was measured or looked up,
 not assumed.
 
-## STEP 4 — SPECIFY to the craft standard
+## STEP 6 — SPECIFY to the craft standard
 
 **State assumptions explicitly** (light vs dark, mobile vs desktop priority,
 brand identity). Don't pick silently. **Surgical scope** — don't restyle anything
@@ -187,7 +224,7 @@ indicator. `aria-live` for dynamic content. Respect `prefers-reduced-motion` and
 
 **DONE WHEN:** the spec covers every rule above for the surface in scope.
 
-## STEP 5 — HAND THE SPEC to the orchestrator
+## STEP 7 — HAND THE SPEC to the orchestrator
 
 Always deliver:
 
@@ -202,7 +239,7 @@ Always deliver:
 
 **DONE WHEN:** all six are in the hand-back.
 
-## STEP 6 — LEARN (mandatory, every run)
+## STEP 8 — LEARN (mandatory, every run)
 
 ```bash
 .claude/agents/_lib/learn.sh frontend-designer \

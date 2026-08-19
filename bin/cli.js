@@ -76,12 +76,15 @@ if (SUBCMD === 'fill') {
   const val = (k) => (cfg[k] && cfg[k].length ? cfg[k] : defaults[k]);
 
   const targets = ['CLAUDE.md'];
-  const agentsDir = path.join(DEST, '.claude', 'agents');
-  // Recurse: agents live one folder deep (.claude/agents/<name>/AGENT.md), and a
-  // flat readdir here would silently fill nothing — leaving every {{PLACEHOLDER}}
-  // in every agent definition unreplaced while still reporting success.
-  if (fs.existsSync(agentsDir)) {
-    for (const rel of walk(agentsDir, path.join('.claude', 'agents'), [])) {
+  // Walk ALL of .claude/, not just agents/. Two reasons, both learned the hard
+  // way: agents live one folder deep, so a flat readdir fills nothing while
+  // still reporting success; and .claude/rules/*.md carry placeholders too —
+  // they shipped unfilled in 2.0.0-2.1.0 because this list named only agents/.
+  // Walking the whole directory means a future file with placeholders is covered
+  // without anyone remembering to extend this.
+  const claudeDir = path.join(DEST, '.claude');
+  if (fs.existsSync(claudeDir)) {
+    for (const rel of walk(claudeDir, '.claude', [])) {
       if (rel.endsWith('.md')) targets.push(rel);
     }
   }

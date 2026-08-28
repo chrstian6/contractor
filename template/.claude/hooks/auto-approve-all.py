@@ -46,6 +46,7 @@ import os
 import re
 import subprocess
 import sys
+import unicodedata
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PROJECT_DIR = os.path.dirname(HERE)          # .../.claude
@@ -66,6 +67,13 @@ GUARDS = {
     "Write": EDIT_GUARDS,
     "MultiEdit": EDIT_GUARDS,
     "NotebookEdit": EDIT_GUARDS,
+    # Without this entry the hook answers `allow` for a subagent_type that
+    # role-based-dispatch.py denies (an unknown role, or a catch-all spelling
+    # its allowlist refuses). The dispatch is still blocked downstream because
+    # deny is monotonic, so it is a precision bug rather than a bypass — but
+    # this file's contract is that what it approves is a SUBSET of what the
+    # engine allows, and without the guard it is not.
+    "Agent": ("role-based-dispatch.py",),
 }
 
 SETTINGS_FILES = (
@@ -82,6 +90,15 @@ PATH_KEYS = ("file_path", "notebook_path", "path", "pattern")
 
 SEGMENT_SPLIT = re.compile(r"\|\||&&|[;|&\n]")
 ENV_ASSIGN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=\S*$")
+
+def _norm_role(value):
+    """The engine's subagent-name normalizer, kept behaviorally identical to
+    role-based-dispatch.py's `norm`. Both hooks must fold the same way, or a
+    spelling one denies is auto-approved by the other."""
+    folded = unicodedata.normalize("NFKC", value).lower()
+    return re.sub(r"[\s\u2010-\u2015\u2212\-_]+", "", folded)
+
+
 RULE = re.compile(r"^(?P<tool>[A-Za-z_][A-Za-z0-9_]*)(?:\((?P<spec>.*)\))?$", re.S)
 
 
@@ -246,6 +263,17 @@ def rule_blocks(rule, tool, tool_input):
         if not values:
             return True                       # can't see the target: fail closed
         return any(glob_matches(spec, v) for v in values)
+
+    if tool == "Agent":
+        # `Agent(general-purpose)` / `Agent(claude)` in permissions.deny name a
+        # SUBAGENT TYPE, not a path or a command. Without this branch every
+        # Agent call fell to the catch-all below and deferred, so a project in
+        # `auto-approve all` mode prompted on every single delegation — the one
+        # thing that mode exists to prevent.
+        subagent = tool_input.get("subagent_type")
+        if not isinstance(subagent, str) or not subagent:
+            return True                       # can't see the role: fail closed
+        return _norm_role(spec) == _norm_role(subagent)
 
     return True                               # scoped rule on a tool we can't model
 
